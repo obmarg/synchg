@@ -153,10 +153,21 @@ class Repo(object):
             return None
 
     @CleanMq
-    def PushToRemote( self ):
+    def PushToRemote(self):
         ''' Pushes to the remote repository '''
         assert self.remote
         self.hg('push', '-b', self.branch, '-r', self.currentRev, self.remote)
+
+    @CleanMq
+    def PushMqToRemote(self):
+        ''' Pushes mq repo to the remote '''
+        assert self.remote
+        try:
+            self.hg('push', '--mq', self.remote)
+        except ProcessExecutionError as e:
+            if e.retcode != 1:
+                #1 just means there's no outgoings
+                raise
 
     def PopPatch(self, patch=None):
         '''
@@ -189,6 +200,31 @@ class Repo(object):
         :param changesets:  A list of changeset ids to strip
         '''
         self.hg('strip', *changesets)
+
+    @CleanMq
+    def Update(self, changeset):
+        '''
+        Updates to a specific changeset
+        :param changeset:   The changeset id to update to
+        '''
+        self.hg('update', changeset)
+
+    def UpdateMq(self):
+        '''
+        Updates the mq repository
+        '''
+        self.hg('update', '--mq')
+
+    def CommitMq(self, msg=None):
+        '''
+        Commits the mq repository
+
+        :param msg:     An optional commit message
+        '''
+        args = []
+        if msg:
+            args = ['-m', 'synchg-commit']
+        self.hg('commit', '--mq', *args)
 
     @CleanMq
     def Clone(self, destination, remoteName=None):
