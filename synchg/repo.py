@@ -58,7 +58,7 @@ class Repo(object):
                 r'^commit:\s+((\d+) modified(, (\d+) unknown)?)?'
                 )
         mqRegexp = re.compile(r'^mq:\s+((\d+) applied, (\d+) unapplied)?')
-        lines = hg['summary']().split()
+        lines = hg('summary').split()
         for line in lines:
             match = commitRegexp.search( line )
             if match:
@@ -74,7 +74,7 @@ class Repo(object):
 
         revMatch = re.search(
             r'^(\w{12})\+?\s+(.*)\s*$',
-            hg['id', '-i', '-b']()
+            hg('id', '-i', '-b')
             )
         if revMatch is None:
             raise Exception("Could not get current revision using hg id")
@@ -145,7 +145,7 @@ class Repo(object):
     @CleanMq
     def PushToRemote( self ):
         ''' Pushes to the remote repository '''
-        hg['push', '-b', self.branch, '-r', self.currentRev, self.host]()
+        hg('push', '-b', self.branch, '-r', self.currentRev, self.host)
 
     def PopPatch(self, patch=None):
         '''
@@ -158,7 +158,7 @@ class Repo(object):
         if level:
             if patch is None:
                 patch = '-a'
-            hg['qpop', patch]()
+            hg('qpop', patch)
 
     def PushPatch( self, patch=None ):
         '''
@@ -168,7 +168,7 @@ class Repo(object):
         '''
         if patch is None:
             patch = '-a'
-        hg['qpush', patch]()
+        hg('qpush', patch)
 
     @CleanMq
     def Clone( self, destination, remoteName=None ):
@@ -177,7 +177,7 @@ class Repo(object):
         @param: destination     The destination clone path
         @param: remoteName      If set a remote will be created with this name
         '''
-        hg['clone', '.', destination]()
+        hg('clone', '.', destination)
         if remoteName:
             #TODO: set up remote name
             pass
