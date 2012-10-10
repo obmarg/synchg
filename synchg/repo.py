@@ -1,7 +1,10 @@
 import re
 from collections import namedtuple
+from plumbum import ProcessExecutionError
+from plumbum.cmd import hg
 
 __all__ = ['Repo']
+
 
 def CleanMq(func):
     '''
@@ -44,23 +47,25 @@ class Repo(object):
 
     def GetSummary(self):
         '''
-        Get's info from hg summary
-        @return  A SummaryInfo namedtuple ( containing other namedtuples )
+        Gets info from hg summary
+
+        :return:  A SummaryInfo namedtuple containing CommitChangeInfo &
+                  MqAppliedInfo
         '''
-        commitData = None
+        commitData = Repo.CommitChangeInfo(0, 0)
         mqData = None
         commitRegexp = re.compile(
                 r'^commit:\s+((\d+) modified(, (\d+) unknown)?)?'
                 )
         mqRegexp = re.compile(r'^mq:\s+((\d+) applied, (\d+) unapplied)?')
-        lines = util.run('hg summary')
+        lines = hg['summary']().split()
         for line in lines:
             match = commitRegexp.search( line )
             if match:
-                commitData = Repo.CommitChangeInfo( *match.group( 2, 4 ) )
+                commitData = Repo.CommitChangeInfo(*match.group( 2, 4 ))
             match = mqRegexp.search( line )
             if match:
-                mqData = Repo.MqAppliedInfo( *match.group( 2, 3 ) )
+                mqData = Repo.MqAppliedInfo(*match.group(2, 3))
         return Repo.SummaryInfo(commitData, None, mqData)
 
     @CleanMq
@@ -69,29 +74,31 @@ class Repo(object):
 
         revMatch = re.search(
             r'^(\w{12})\+?\s+(.*)\s*$',
-            '\n'.join(util.run('hg id -i -b'))
+            hg['id', '-i', '-b']()
             )
         if revMatch is None:
             raise Exception("Could not get current revision using hg id")
         self.currentRev, self.branch = revMatch.group(1, 2)
 
-    def RunListCommand(self, command, headerLines=0):
+    def _RunListCommand(self, command, headerLines=0):
         '''
-        Runs an hg command that gets a list
-        Params:
-            command - The command to run
-            headerLines - The number of lines to chop off the top of the output
+        Runs an hg command that gets a list (outgoing, incoming etc.)
+
+        :param command:     The plumbum command object to run
+        :param headerLines: The number of lines to chop off the top of
+                            the output
         '''
         try:
-            output = util.run(command, silent=True)
+            lines = command().split()
             if headerLines == 0:
-                return output
-            if len(output) < headerLines:
+                return lines
+            if len(lines) < headerLines:
                 raise Exception("Unexpected number of lines from hg command")
-            return output[headerLines:]
-        except util.RunError as e:
-            if e.code != 1:
-                # 1 just means there's no outgoings
+            return lines[headerLines:]
+        except ProcessExecutionError as e:
+            if e.retcode != 1:
+                # retcode of 1 just means there's nothing in the list,
+                # so ignore it
                 raise
         return []
 
@@ -99,70 +106,69 @@ class Repo(object):
     def GetOutgoings(self):
         '''
         Gets the outgoing changesets.
-        Returns a list of changeset hashes
+
+        :returns: A list of changeset hashes for the outgoing changesets
         '''
-        return self.RunListCommand(
-            'hg outgoing -b %s -r %s --template "{node}\\n" %s' % (
-                    self.branch, self.currentRev, self.host
-                    ),
-            headerLines=2
-            )
+        return self._RunListCommand(
+                hg[ 'outgoing', '-b', self.branch, '-r',
+                    self.currentRev, '--template', '"{node}\\n"', self.host
+                    ],
+                headerLines=2
+                )
 
     @CleanMq
     def GetIncomings(self):
         '''
         Gets the incoming changesets.
-        Returns a list of changeset hashes
+
+        :returns: A list of changeset hashes for the incoming changesets
         '''
-        return self.RunListCommand(
-            'hg incoming -b %s --template "{node}\\n" %s' % (
-                    self.branch, self.host
-                    ),
-            headerLines=2
-            )
+        return self._RunListCommand(
+                hg[ 'incoming', '-b', self.branch, '--template', '"{node}\\n"',
+                    self.host
+                    ],
+                headerLines=2
+                )
 
     def GetLastAppliedPatch(self):
         '''
-        Gets the last applied patch
-        Returns a single hash (or None)
+        Gets the last applied mq patch (if there is one)
+        :returns: A single mq patch name (or None)
         '''
-        ls = self.RunListCommand(
-                'hg qapplied'
-                )
-        if len( ls ):
-            return ls[-1]
+        # TODO: Want this to handle mq being disabled...
+        patches = self._RunListCommand(hg['qapplied'])
+        if len(patches):
+            return patches[-1]
         else:
             return None
 
     @CleanMq
     def PushToRemote( self ):
         ''' Pushes to the remote repository '''
-        util.run( 'hg push -b %s -r %s %s' % (
-            self.branch, self.currentRev, self.host
-            ) )
+        hg['push', '-b', self.branch, '-r', self.currentRev, self.host]()
 
     def PopPatch(self, patch=None):
         '''
         Pops an mq patch on local repo.
-        Params:
-            patch - The patch to pop.  If None, all will be popped
+
+        :param patch: Name of the patch to pop.  If None, all will be popped
         '''
         # Check there are some patches applied
         level = self.GetLastAppliedPatch()
         if level:
             if patch is None:
                 patch = '-a'
-            util.run('hg qpop %s' % patch)
+            hg['qpop', patch]()
 
     def PushPatch( self, patch=None ):
         '''
         Pushes an mq patch on local repo
-        Params:
-            patch - The patch to push.  If None, all will be pushed
+
+        :param patch: Name of the patch to push.  If None, all will be pushed
         '''
         if patch is None:
             patch = '-a'
-        util.run('hg qpush %s' % patch)
+        hg['qpush', patch]()
 
     @CleanMq
     def Clone( self, destination, remoteName=None ):
@@ -171,7 +177,7 @@ class Repo(object):
         @param: destination     The destination clone path
         @param: remoteName      If set a remote will be created with this name
         '''
-        util.run('hg clone . "%s"' % destination)
+        hg['clone', '.', destination]()
         if remoteName:
             #TODO: set up remote name
             pass
