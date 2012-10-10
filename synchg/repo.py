@@ -171,7 +171,7 @@ class Repo(object):
                 patch = '-a'
             self.hg('qpop', patch)
 
-    def PushPatch( self, patch=None ):
+    def PushPatch(self, patch=None):
         '''
         Pushes an mq patch on local repo
 
@@ -182,7 +182,16 @@ class Repo(object):
         self.hg('qpush', patch)
 
     @CleanMq
-    def Clone( self, destination, remoteName=None ):
+    def Strip(self, changesets):
+        '''
+        Strips changesets from the repo with the strip command
+
+        :param changesets:  A list of changeset ids to strip
+        '''
+        self.hg('strip', *changesets)
+
+    @CleanMq
+    def Clone(self, destination, remoteName=None):
         '''
         Clones the repository to a different location
         @param: destination     The destination clone path
