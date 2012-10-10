@@ -15,15 +15,14 @@ def SyncRemote(host, project):
     print "Syncing remote repo %s on %s" % (project, host)
     with SshMachine() as remote:
         with remote.cwd(remote.cwd / remote.env['HGROOT']):
-            _DoSync(host, Repo(hg, host), Repo(remote['hg']))
+            _DoSync(Repo(hg, host), Repo(remote['hg']))
 
 
-def _DoSync(host, local, remote):
+def _DoSync(local, remote):
     '''
     Function that actually handles the syncing after everything
     has been set up
 
-    :param host:    The hostname of the remote repository
     :param local:   The local repository
     :param remote:  The remote repository
     '''
@@ -38,15 +37,9 @@ def _DoSync(host, local, remote):
     remote.PopPatch()
 
     if len(outgoings) > 0:
-        #TODO: Probably want to check if there are any local unsyned
-        #       changes.
-        #       It'll cause future commands to fail in a rather ugly way.
-        #       so if we could die here with a sane message it'd be great
         incomings = local.GetIncomings()
         if len(incomings) > 0:
             print "Stripping %i changesets from remote" % (len(incomings))
-            # This next command can fail if there's local changes (so can
-            # most probably ), so maybe want to -f it?
             # TODO: Also probably want the ability to provide a prompt here
             remote.strip(incomings)
         print "Pushing to remote"
@@ -57,15 +50,11 @@ def _DoSync(host, local, remote):
 
     appliedPatch = local.GetLastAppliedPatch()
     if appliedPatch:
-        #TODO: Could check if qinit -c has been run here.
-        #      Same with remote host.
-        #      Would also be good to ensure that the patches remote has
-        #      been setup, but for now just assume that it has
-
-        #TODO: Also want to wrap these run's in Repo class
+        # TODO: would be good to do a sanity check on the state of
+        #       the mq repo etc. here...
         local.CommitMq()
         local.PushMqToRemote()
-        print "Pushed mq repository to %s" % host
+        print "Pushed mq repository to remote"
         remote.UpdateMq()
         remote.PushPatch(appliedPatch)
         print "Updated remote mq repository and applied patches"
