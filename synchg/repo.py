@@ -1,7 +1,6 @@
 import re
 from collections import namedtuple
 from plumbum import ProcessExecutionError
-from plumbum.cmd import hg
 
 __all__ = ['Repo']
 
@@ -25,6 +24,10 @@ def CleanMq(func):
     return InnerFunc
 
 
+class UncommitedChangesError(Exception):
+    pass
+
+
 class Repo(object):
     SummaryInfo = namedtuple('SummaryInfo', ['commit', 'update', 'mq'])
     CommitChangeInfo = namedtuple(
@@ -33,14 +36,19 @@ class Repo(object):
             )
     MqAppliedInfo = namedtuple('MqAppliedInfo', ['applied', 'unapplied'])
 
-    def __init__(self, host):
-        self.host = host
+    def __init__(self, hg, remote=None):
+        '''
+        Constructor
+
+        :param hg:      The plumbum hg object to use (can be local or remote)
+        :param remote:  The remote hostname to use
+        '''
+        self.hg = hg
+        self.remote = remote
         # Get the summary, to check if we have any un-committed changes
         summary = self.GetSummary()
         if summary.commit.modified:
-            raise Exception(
-                    "Local mercurial repository has uncommited changes"
-                    )
+            raise UncommitedChangesError()
             # TODO: Prompt the user to commit/refresh/shelve changes or abort
         self.CheckCurrentRev()
         self.prevLevel = None
@@ -58,7 +66,7 @@ class Repo(object):
                 r'^commit:\s+((\d+) modified(, (\d+) unknown)?)?'
                 )
         mqRegexp = re.compile(r'^mq:\s+((\d+) applied, (\d+) unapplied)?')
-        lines = hg('summary').split()
+        lines = self.hg('summary').split()
         for line in lines:
             match = commitRegexp.search( line )
             if match:
@@ -74,7 +82,7 @@ class Repo(object):
 
         revMatch = re.search(
             r'^(\w{12})\+?\s+(.*)\s*$',
-            hg('id', '-i', '-b')
+            self.hg('id', '-i', '-b')
             )
         if revMatch is None:
             raise Exception("Could not get current revision using hg id")
@@ -109,10 +117,11 @@ class Repo(object):
 
         :returns: A list of changeset hashes for the outgoing changesets
         '''
+        assert self.remote
         return self._RunListCommand(
-                hg[ 'outgoing', '-b', self.branch, '-r',
-                    self.currentRev, '--template', '"{node}\\n"', self.host
-                    ],
+                self.hg[ 'outgoing', '-b', self.branch, '-r', self.currentRev,
+                         '--template', '"{node}\\n"', self.remote
+                         ],
                 headerLines=2
                 )
 
@@ -123,10 +132,11 @@ class Repo(object):
 
         :returns: A list of changeset hashes for the incoming changesets
         '''
+        assert self.remote
         return self._RunListCommand(
-                hg[ 'incoming', '-b', self.branch, '--template', '"{node}\\n"',
-                    self.host
-                    ],
+                self.hg[ 'incoming', '-b', self.branch,
+                         '--template', '"{node}\\n"', self.remote
+                         ],
                 headerLines=2
                 )
 
@@ -136,7 +146,7 @@ class Repo(object):
         :returns: A single mq patch name (or None)
         '''
         # TODO: Want this to handle mq being disabled...
-        patches = self._RunListCommand(hg['qapplied'])
+        patches = self._RunListCommand(self.hg['qapplied'])
         if len(patches):
             return patches[-1]
         else:
@@ -145,7 +155,8 @@ class Repo(object):
     @CleanMq
     def PushToRemote( self ):
         ''' Pushes to the remote repository '''
-        hg('push', '-b', self.branch, '-r', self.currentRev, self.host)
+        assert self.remote
+        self.hg('push', '-b', self.branch, '-r', self.currentRev, self.remote)
 
     def PopPatch(self, patch=None):
         '''
@@ -158,7 +169,7 @@ class Repo(object):
         if level:
             if patch is None:
                 patch = '-a'
-            hg('qpop', patch)
+            self.hg('qpop', patch)
 
     def PushPatch( self, patch=None ):
         '''
@@ -168,7 +179,7 @@ class Repo(object):
         '''
         if patch is None:
             patch = '-a'
-        hg('qpush', patch)
+        self.hg('qpush', patch)
 
     @CleanMq
     def Clone( self, destination, remoteName=None ):
@@ -177,7 +188,8 @@ class Repo(object):
         @param: destination     The destination clone path
         @param: remoteName      If set a remote will be created with this name
         '''
-        hg('clone', '.', destination)
+        # TODO: This one will probably need moved elsewhere
+        self.hg('clone', '.', destination)
         if remoteName:
             #TODO: set up remote name
             pass
