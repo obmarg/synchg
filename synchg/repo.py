@@ -1,5 +1,6 @@
 import re
 from collections import namedtuple
+from contextlib import contextmanager
 from plumbum import ProcessExecutionError
 
 __all__ = ['Repo']
@@ -24,24 +25,6 @@ class Repo(object):
     ChangesetInfo = namedtuple('ChangsetInfo', ['hash', 'desc'])
     ChangesetInfoRegexp = re.compile(r'^(?P<hash>\w+)\t(?P<desc>.*)$')
 
-    def _CleanMq(func):
-        '''
-        Decorator that ensures a function is always with no patches applied
-        Should only be applied on Repo methods
-
-        Params:
-            func - The function to decorate
-        '''
-        def InnerFunc(self, *pargs):
-            revertTo = self.GetLastAppliedPatch()
-            try:
-                self.PopPatch()
-                return func(self, *pargs)
-            finally:
-                if revertTo:
-                    self.PushPatch(revertTo)
-        return InnerFunc
-
     def __init__(self, hg, remote=None):
         '''
         Constructor
@@ -58,6 +41,31 @@ class Repo(object):
             # TODO: Prompt the user to commit/refresh/shelve changes or abort
         self.CheckCurrentRev()
         self.prevLevel = None
+
+    @contextmanager
+    def CleanMq(self):
+        '''
+        Returns a context manager that keeps the mq repository clean
+        for it's lifetime
+        '''
+        revertTo = self.GetLastAppliedPatch()
+        self.PopPatch()
+        yield
+        if revertTo:
+            self.PushPatch(revertTo)
+
+    def _CleanMq(func):
+        '''
+        Decorator that ensures a function is always run with no patches applied
+        Should only be applied on Repo methods
+
+        Params:
+            func - The function to decorate
+        '''
+        def InnerFunc(self, *pargs):
+            with self.CleanMq():
+                return func(self, *pargs)
+        return InnerFunc
 
     def GetSummary(self):
         '''
