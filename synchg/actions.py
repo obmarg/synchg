@@ -2,6 +2,11 @@ import plumbum
 from plumbum import SshMachine
 from plumbum.cmd import hg
 from repo import Repo
+from utils import yn
+
+
+class AbortException(Exception):
+    pass
 
 
 def SyncRemote(host, name, localpath):
@@ -47,10 +52,13 @@ def _DoSync(local, remote):
         if local.outgoings:
             incomings = local.incomings
             if incomings:
-                print "Stripping {0} changesets from remote".format(
-                        len(incomings)
-                        )
-                # TODO: Probably want to provide a prompt here
+                print "Changesets will be stripped from remote:"
+                for hash, desc in incomings:
+                    if len(desc) > 50:
+                        desc = desc[:47] + '...'
+                    print "  {0}  {1}".format(hash[:6], desc)
+                if not yn('Do you want to continue?'):
+                    raise AbortException()
                 remote.Strip(incomings)
             print "Pushing to remote"
             local.PushToRemote()

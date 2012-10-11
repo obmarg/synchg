@@ -1,5 +1,5 @@
-from plumbum import cli, local, Path
-from actions import SyncRemote
+from plumbum import cli, local
+from actions import SyncRemote, AbortException
 
 
 class SyncHg(cli.Application):
@@ -25,4 +25,7 @@ class SyncHg(cli.Application):
 
 
 def run():
-    SyncHg.run()
+    try:
+        SyncHg.run()
+    except AbortException:
+        pass
