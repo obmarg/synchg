@@ -5,17 +5,19 @@ from plumbum.cmd import hg
 from repo import Repo
 
 
-def SyncRemote(host, project):
+def SyncRemote(host, name, localpath):
     '''
     Syncs a remote repository
 
-    :param host:    The hostname of the remote repository
-    :param project: The name of the project that is being synced
+    :param host:        The hostname of the remote repository
+    :param name:        The name of the project that is being synced
+    :param localpath:   A plumbum path to the local repository
     '''
-    print "Syncing remote repo %s on %s" % (project, host)
-    with SshMachine() as remote:
-        with remote.cwd(remote.cwd / remote.env['HGROOT']):
-            _DoSync(Repo(hg, host), Repo(remote['hg']))
+    print "Syncing remote repo %s on %s" % (name, host)
+    with SshMachine(host) as remote:
+        with plumbum.local.cwd(localpath):
+            with remote.cwd(remote.cwd / remote.env['HGROOT'] / name):
+                _DoSync(Repo(hg, host), Repo(remote['hg']))
 
 
 def _DoSync(local, remote):
