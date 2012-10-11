@@ -36,6 +36,13 @@ class Repo(object):
             )
     MqAppliedInfo = namedtuple('MqAppliedInfo', ['applied', 'unapplied'])
 
+    # Template Parameter for hg log-style commands
+    HgTemplateParameter = '{node}\\t{desc|firstline}\\n'
+
+    # Contains details of a changeset
+    ChangesetInfo = namedtuple('ChangsetInfo', ['hash', 'desc'])
+    ChangesetInfoRegexp = re.compile(r'^(?P<hash>\w+)\t(?P<desc>.*)$')
+
     def __init__(self, hg, remote=None):
         '''
         Constructor
@@ -110,6 +117,17 @@ class Repo(object):
                 raise
         return []
 
+    def _GetChangesetInfoList(self, *pargs, **kwargs):
+        '''
+        Utility function that calls _RunListCommand and filters the results
+        through ChangesetInfoRegexp
+
+        :returns:   A list of ChangesetInfo namedtuples
+        '''
+        lines = self._RunListCommand(*pargs, **kwargs)
+        matches = (self.ChangesetInfoRegexp.match(line) for line in lines)
+        return [self.ChangesetInfo(**match.groupdict()) for match in matches]
+
     @CleanMq
     def GetOutgoings(self):
         '''
@@ -118,9 +136,9 @@ class Repo(object):
         :returns: A list of changeset hashes for the outgoing changesets
         '''
         assert self.remote
-        return self._RunListCommand(
+        return self._GetChangesetInfoList(
                 self.hg[ 'outgoing', '-b', self.branch, '-r', self.currentRev,
-                         '--template', '"{node}\\n"', self.remote
+                         '--template', self.HgTemplateParam, self.remote
                          ],
                 headerLines=2
                 )
@@ -133,9 +151,9 @@ class Repo(object):
         :returns: A list of changeset hashes for the incoming changesets
         '''
         assert self.remote
-        return self._RunListCommand(
+        return self._GetChangesetInfoList(
                 self.hg[ 'incoming', '-b', self.branch,
-                         '--template', '"{node}\\n"', self.remote
+                         '--template', self.HgTemplateParam, self.remote
                          ],
                 headerLines=2
                 )
@@ -197,16 +215,19 @@ class Repo(object):
         '''
         Strips changesets from the repo with the strip command
 
-        :param changesets:  A list of changeset ids to strip
+        :param changesets:  A list of ChangesetInfo's to strip
         '''
-        self.hg('strip', *changesets)
+        self.hg('strip', *[cs.hash for cs in changesets])
 
     @CleanMq
     def Update(self, changeset):
         '''
         Updates to a specific changeset
+
         :param changeset:   The changeset id to update to
         '''
+        # TODO: Seems a bit inconsistent that this takes a changeset id/hash
+        # and other functions take a ChangesetInfo.  Maybe fix that
         self.hg('update', changeset)
 
     def UpdateMq(self):
