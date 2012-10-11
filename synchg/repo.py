@@ -170,12 +170,15 @@ class Repo(object):
         Gets the last applied mq patch (if there is one)
         :returns: A single mq patch name (or None)
         '''
-        # TODO: Want this to handle mq being disabled...
-        patches = self._RunListCommand(self.hg['qapplied'])
-        if len(patches):
-            return patches[-1]
-        else:
-            return None
+        try:
+            patches = self._RunListCommand(self.hg['qapplied'])
+            if patches:
+                return patches[-1]
+        except ProcessExecutionError as e:
+            if e.retcode != 255:
+                # 255 means mq is probably disabled
+                raise
+        return None
 
     @_CleanMq
     def PushToRemote(self):
