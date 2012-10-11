@@ -42,7 +42,7 @@ def _DoSync(local, remote):
         if len(incomings) > 0:
             print "Stripping {0} changesets from remote".format(len(incomings))
             # TODO: Also probably want the ability to provide a prompt here
-            remote.strip(incomings)
+            remote.Strip(incomings)
         print "Pushing to remote"
         local.PushToRemote()
 

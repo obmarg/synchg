@@ -5,25 +5,6 @@ from plumbum import ProcessExecutionError
 __all__ = ['Repo']
 
 
-def CleanMq(func):
-    '''
-    Decorator that ensures a function is always with no patches applied
-    Should only be applied on Repo methods
-
-    Params:
-        func - The function to decorate
-    '''
-    def InnerFunc(self, *pargs):
-        revertTo = self.GetLastAppliedPatch()
-        try:
-            self.PopPatch()
-            return func(self, *pargs)
-        finally:
-            if revertTo:
-                self.PushPatch(revertTo)
-    return InnerFunc
-
-
 class UncommitedChangesError(Exception):
     pass
 
@@ -37,11 +18,29 @@ class Repo(object):
     MqAppliedInfo = namedtuple('MqAppliedInfo', ['applied', 'unapplied'])
 
     # Template Parameter for hg log-style commands
-    HgTemplateParameter = '{node}\\t{desc|firstline}\\n'
+    HgTemplateParam = '{node}\\t{desc|firstline}\\n'
 
     # Contains details of a changeset
     ChangesetInfo = namedtuple('ChangsetInfo', ['hash', 'desc'])
     ChangesetInfoRegexp = re.compile(r'^(?P<hash>\w+)\t(?P<desc>.*)$')
+
+    def _CleanMq(func):
+        '''
+        Decorator that ensures a function is always with no patches applied
+        Should only be applied on Repo methods
+
+        Params:
+            func - The function to decorate
+        '''
+        def InnerFunc(self, *pargs):
+            revertTo = self.GetLastAppliedPatch()
+            try:
+                self.PopPatch()
+                return func(self, *pargs)
+            finally:
+                if revertTo:
+                    self.PushPatch(revertTo)
+        return InnerFunc
 
     def __init__(self, hg, remote=None):
         '''
@@ -83,7 +82,7 @@ class Repo(object):
                 mqData = Repo.MqAppliedInfo(*match.group(2, 3))
         return Repo.SummaryInfo(commitData, None, mqData)
 
-    @CleanMq
+    @_CleanMq
     def CheckCurrentRev( self ):
         ''' Gets the current revision and branch and stores it '''
 
@@ -104,7 +103,7 @@ class Repo(object):
                             the output
         '''
         try:
-            lines = command().split()
+            lines = command().splitlines()
             if headerLines == 0:
                 return lines
             if len(lines) < headerLines:
@@ -128,7 +127,7 @@ class Repo(object):
         matches = (self.ChangesetInfoRegexp.match(line) for line in lines)
         return [self.ChangesetInfo(**match.groupdict()) for match in matches]
 
-    @CleanMq
+    @_CleanMq
     def GetOutgoings(self):
         '''
         Gets the outgoing changesets.
@@ -143,7 +142,7 @@ class Repo(object):
                 headerLines=2
                 )
 
-    @CleanMq
+    @_CleanMq
     def GetIncomings(self):
         '''
         Gets the incoming changesets.
@@ -170,13 +169,13 @@ class Repo(object):
         else:
             return None
 
-    @CleanMq
+    @_CleanMq
     def PushToRemote(self):
         ''' Pushes to the remote repository '''
         assert self.remote
         self.hg('push', '-b', self.branch, '-r', self.currentRev, self.remote)
 
-    @CleanMq
+    @_CleanMq
     def PushMqToRemote(self):
         ''' Pushes mq repo to the remote '''
         assert self.remote
@@ -210,7 +209,7 @@ class Repo(object):
             patch = '-a'
         self.hg('qpush', patch)
 
-    @CleanMq
+    @_CleanMq
     def Strip(self, changesets):
         '''
         Strips changesets from the repo with the strip command
@@ -219,7 +218,7 @@ class Repo(object):
         '''
         self.hg('strip', *[cs.hash for cs in changesets])
 
-    @CleanMq
+    @_CleanMq
     def Update(self, changeset):
         '''
         Updates to a specific changeset
@@ -252,7 +251,7 @@ class Repo(object):
                 #1 just means there's no changes
                 raise
 
-    @CleanMq
+    @_CleanMq
     def Clone(self, destination, remoteName=None):
         '''
         Clones the repository to a different location
