@@ -30,21 +30,22 @@ def _DoSync(local, remote):
     print "Syncing to changeset {0} on branch {1}".format(
             local.currentRev, local.branch
             )
-    #TODO: Totally want to log all the output from the remote commands
-    #       particularly the strip ones etc.  would be much safer
-    outgoings = local.GetOutgoings()
 
     # Pop any patches on the remote before we begin
     remote.PopPatch()
 
-    if len(outgoings) > 0:
-        incomings = local.GetIncomings()
-        if len(incomings) > 0:
-            print "Stripping {0} changesets from remote".format(len(incomings))
-            # TODO: Also probably want the ability to provide a prompt here
-            remote.Strip(incomings)
-        print "Pushing to remote"
-        local.PushToRemote()
+    with local.CleanMq():
+        outgoings = local.GetOutgoings()
+        if outgoings:
+            incomings = local.GetIncomings()
+            if incomings:
+                print "Stripping {0} changesets from remote".format(
+                        len(incomings)
+                        )
+                # TODO: Probably want to provide a prompt here
+                remote.Strip(incomings)
+            print "Pushing to remote"
+            local.PushToRemote()
 
     print "Updating remote"
     remote.Update(local.currentRev)

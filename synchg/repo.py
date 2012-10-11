@@ -183,7 +183,6 @@ class Repo(object):
         assert self.remote
         self.hg('push', '-b', self.branch, '-r', self.currentRev, self.remote)
 
-    @_CleanMq
     def PushMqToRemote(self):
         ''' Pushes mq repo to the remote '''
         assert self.remote
