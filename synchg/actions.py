@@ -12,7 +12,7 @@ def SyncRemote(host, name, localpath):
     :param name:        The name of the project that is being synced
     :param localpath:   A plumbum path to the local repository
     '''
-    print "Syncing remote repo {0} on {1}".format(name, host)
+    print "Sync {0} -> {1}".format(name, host)
     with SshMachine(host) as remote:
         with plumbum.local.cwd(localpath):
             with remote.cwd(remote.cwd / remote.env['HGROOT'] / name):
@@ -27,6 +27,15 @@ def _DoSync(local, remote):
     :param local:   The local repository
     :param remote:  The remote repository
     '''
+    # First, check the state of each repository
+    if remote.summary.commit.modified:
+        # Changes might be lost on remote...
+        raise Exception('remote repository has changes')
+    if local.summary.commit.modified:
+        # Local has changes, prompt to qrefresh (or commit?)
+        # For now, except (until we have some prompting code)
+        raise Exception('local changes detected')
+
     print "Syncing to changeset {0} on branch {1}".format(
             local.currentRev, local.branch
             )
@@ -52,8 +61,6 @@ def _DoSync(local, remote):
 
     appliedPatch = local.GetLastAppliedPatch()
     if appliedPatch:
-        # TODO: would be good to do a sanity check on the state of
-        #       the mq repo etc. here...
         local.CommitMq()
         local.PushMqToRemote()
         print "Pushed mq repository to remote"

@@ -6,12 +6,8 @@ from plumbum import ProcessExecutionError
 __all__ = ['Repo']
 
 
-class UncommitedChangesError(Exception):
-    pass
-
-
 class Repo(object):
-    SummaryInfo = namedtuple('SummaryInfo', ['commit', 'update', 'mq'])
+    SummaryInfo = namedtuple('SummaryInfo', ['commit', 'mq'])
     CommitChangeInfo = namedtuple(
             'CommitChangeInfo',
             ['modified', 'unknown']
@@ -35,10 +31,6 @@ class Repo(object):
         self.hg = hg
         self.remote = remote
         # Get the summary, to check if we have any un-committed changes
-        summary = self.GetSummary()
-        if summary.commit.modified:
-            raise UncommitedChangesError()
-            # TODO: Prompt the user to commit/refresh/shelve changes or abort
         self.CheckCurrentRev()
         self.prevLevel = None
 
@@ -67,7 +59,8 @@ class Repo(object):
                 return func(self, *pargs)
         return InnerFunc
 
-    def GetSummary(self):
+    @property
+    def summary(self):
         '''
         Gets info from hg summary
 
@@ -88,7 +81,7 @@ class Repo(object):
             match = mqRegexp.search( line )
             if match:
                 mqData = Repo.MqAppliedInfo(*match.group(2, 3))
-        return Repo.SummaryInfo(commitData, None, mqData)
+        return Repo.SummaryInfo(commitData, mqData)
 
     @_CleanMq
     def CheckCurrentRev( self ):
