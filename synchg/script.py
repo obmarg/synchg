@@ -1,5 +1,5 @@
 from plumbum import cli, local
-from actions import SyncRemote, AbortException
+from actions import SyncRemote, AbortException, SyncError
 
 
 class SyncHg(cli.Application):
@@ -29,3 +29,6 @@ def run():
         SyncHg.run()
     except AbortException:
         pass
+    except SyncError as e:
+        # TODO: Colour would be nice here..
+        print "Error: {0}".format(e)

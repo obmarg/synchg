@@ -75,7 +75,7 @@ class Repo(object):
                 r'^commit:\s+((\d+) modified(, (\d+) unknown)?)?'
                 )
         mqRegexp = re.compile(r'^mq:\s+((\d+) applied, (\d+) unapplied)?')
-        lines = self.hg('summary').split()
+        lines = self.hg('summary').splitlines()
         for line in lines:
             match = commitRegexp.search( line )
             if match:

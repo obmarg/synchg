@@ -6,6 +6,16 @@ from utils import yn
 
 
 class AbortException(Exception):
+    ''' An exception that's thrown when a user chooses to abort '''
+    pass
+
+
+class SyncError(Exception):
+    '''
+    An exception that's thrown when a non-exceptional error occurs.  This
+    exception is usually acompanied by an error message and should probably
+    be caught and the backtrace supressed.
+    '''
     pass
 
 
@@ -35,15 +45,27 @@ def _DoSync(local, remote):
     # First, check the state of each repository
     if remote.summary.commit.modified:
         # Changes might be lost on remote...
-        raise Exception('remote repository has changes')
-    if local.summary.commit.modified:
-        # Local has changes, prompt to qrefresh (or commit?)
-        # For now, except (until we have some prompting code)
-        raise Exception('local changes detected')
+        raise SyncError('Remote repository has changes')
 
-    print "Syncing to changeset {0} on branch {1}".format(
-            local.currentRev, local.branch
-            )
+    lsummary = local.summary
+    if lsummary.commit.modified:
+        print "Local repository has uncomitted changes."
+        if lsummary.mq.applied:
+            # We can't push/pop patches to check remote is
+            # in sync if we've got local changes, so prompt to refresh.
+            if yn('Do you want to qrefresh?'):
+                # TODO: qrefresh
+                raise Exception('Not implemented yet')
+            else:
+                print "Ok.  Please run again after dealing with changes."
+                raise AbortException
+        else:
+            # If we're not doing an mq sync, we can happily ignore
+            # these changes, but probably want to make sure that's
+            # what the user wants...
+            if not yn('Do you want to ignore these changes?'):
+                print "Ok.  Please run again after dealing with changes."
+                raise AbortException
 
     # Pop any patches on the remote before we begin
     remote.PopPatch()
