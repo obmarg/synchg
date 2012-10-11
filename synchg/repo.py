@@ -1,4 +1,5 @@
 import re
+import functools
 from collections import namedtuple
 from contextlib import contextmanager
 from plumbum import ProcessExecutionError
@@ -54,6 +55,7 @@ class Repo(object):
         Params:
             func - The function to decorate
         '''
+        @functools.wraps(func)
         def InnerFunc(self, *pargs):
             with self.CleanMq():
                 return func(self, *pargs)
@@ -128,8 +130,9 @@ class Repo(object):
         matches = (self.ChangesetInfoRegexp.match(line) for line in lines)
         return [self.ChangesetInfo(**match.groupdict()) for match in matches]
 
+    @property
     @_CleanMq
-    def GetOutgoings(self):
+    def outgoings(self):
         '''
         Gets the outgoing changesets.
 
@@ -143,8 +146,9 @@ class Repo(object):
                 headerLines=2
                 )
 
+    @property
     @_CleanMq
-    def GetIncomings(self):
+    def incomings(self):
         '''
         Gets the incoming changesets.
 

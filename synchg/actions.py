@@ -44,9 +44,8 @@ def _DoSync(local, remote):
     remote.PopPatch()
 
     with local.CleanMq():
-        outgoings = local.GetOutgoings()
-        if outgoings:
-            incomings = local.GetIncomings()
+        if local.outgoings:
+            incomings = local.incomings
             if incomings:
                 print "Stripping {0} changesets from remote".format(
                         len(incomings)
