@@ -1,4 +1,3 @@
-from six import print_
 import plumbum
 from plumbum import SshMachine
 from plumbum.cmd import hg
@@ -13,7 +12,7 @@ def SyncRemote(host, name, localpath):
     :param name:        The name of the project that is being synced
     :param localpath:   A plumbum path to the local repository
     '''
-    print "Syncing remote repo %s on %s" % (name, host)
+    print "Syncing remote repo {0} on {1}".format(name, host)
     with SshMachine(host) as remote:
         with plumbum.local.cwd(localpath):
             with remote.cwd(remote.cwd / remote.env['HGROOT'] / name):
@@ -28,7 +27,7 @@ def _DoSync(local, remote):
     :param local:   The local repository
     :param remote:  The remote repository
     '''
-    print_( "Syncing to changeset %s on branch %s",
+    print "Syncing to changeset {0} on branch {1}".format(
             local.currentRev, local.branch
             )
     #TODO: Totally want to log all the output from the remote commands
@@ -41,13 +40,13 @@ def _DoSync(local, remote):
     if len(outgoings) > 0:
         incomings = local.GetIncomings()
         if len(incomings) > 0:
-            print "Stripping %i changesets from remote" % (len(incomings))
+            print "Stripping changesets from remote".format(len(incomings))
             # TODO: Also probably want the ability to provide a prompt here
             remote.strip(incomings)
         print "Pushing to remote"
         local.PushToRemote()
-        print "Updating remote"
 
+    print "Updating remote"
     remote.Update(local.currentRev)
 
     appliedPatch = local.GetLastAppliedPatch()
