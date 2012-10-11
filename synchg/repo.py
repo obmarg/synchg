@@ -224,7 +224,12 @@ class Repo(object):
         args = []
         if msg:
             args = ['-m', 'synchg-commit']
-        self.hg('commit', '--mq', *args)
+        try:
+            self.hg('commit', '--mq', *args)
+        except ProcessExecutionError as e:
+            if e.retcode != 1:
+                #1 just means there's no changes
+                raise
 
     @CleanMq
     def Clone(self, destination, remoteName=None):
