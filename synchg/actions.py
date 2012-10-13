@@ -1,6 +1,5 @@
 import plumbum
 from plumbum import SshMachine
-from plumbum.cmd import hg
 from repo import Repo
 from utils import yn
 
@@ -13,8 +12,8 @@ class AbortException(Exception):
 class SyncError(Exception):
     '''
     An exception that's thrown when a non-exceptional error occurs.  This
-    exception is usually acompanied by an error message and should probably
-    be caught and the backtrace supressed.
+    exception is usually accompanied by an error message and should probably
+    be caught and the backtrace suppressed.
     '''
     pass
 
@@ -31,7 +30,7 @@ def SyncRemote(host, name, localpath):
     with SshMachine(host) as remote:
         with plumbum.local.cwd(localpath):
             with remote.cwd(remote.cwd / remote.env['HGROOT'] / name):
-                _DoSync(Repo(hg, host), Repo(remote['hg']))
+                _DoSync(Repo(plumbum.local, host), Repo(remote))
 
 
 def _DoSync(local, remote):

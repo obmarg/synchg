@@ -1,6 +1,7 @@
 import re
 import functools
 from collections import namedtuple
+from ConfigParser import ConfigParser
 from contextlib import contextmanager
 from plumbum import ProcessExecutionError
 
@@ -22,14 +23,16 @@ class Repo(object):
     ChangesetInfo = namedtuple('ChangsetInfo', ['hash', 'desc'])
     ChangesetInfoRegexp = re.compile(r'^(?P<hash>\w+)\t(?P<desc>.*)$')
 
-    def __init__(self, hg, remote=None):
+    def __init__(self, machine, remote=None):
         '''
         Constructor
 
-        :param hg:      The plumbum hg object to use (can be local or remote)
+        :param machine:     The plumbum machine object to use
+                            (can be local or remote)
         :param remote:  The remote hostname to use
         '''
-        self.hg = hg
+        self.machine = machine
+        self.hg = self.machine['hg']
         self.remote = remote
         self._currentRev = self._branch = None
         self.prevLevel = None
@@ -286,17 +289,37 @@ class Repo(object):
     def Clone(self, destination, remoteName=None):
         '''
         Clones the repository to a different location
-        @param: destination     The destination clone path
-        @param: remoteName      If set a remote will be created with this name
+
+        :param destination:     The destination clone path
+        :param remoteName:      If set a remote will be created with this name
         '''
-        # TODO: This one will probably need moved elsewhere
-        self.hg('clone', '.', destination)
-        if remoteName:
-            #TODO: set up remote name
-            pass
+        self._DoClone(destination, remoteName)
+        patches = self.machine.cwd / '.hg' / 'patches'
+        if patches.exists():
+            # Clone mq repository
+            # TODO: Possibly do a sanity check and call hg init --mq if needed
+            with self.machine.cwd(patches):
+                mqdest = destination + '/.hg/patches'
+                self._DoClone(mqdest, remoteName)
+
         # This all needs to go in different function, but:
         # Need to hg update on remote
         # Then hg qinit -c (on remote, and possibly local)
         # then (if not already done) add mq remote
         # then local hg commit -mq if needed
         # then hg push --mq glencaple etc.
+
+    def _DoClone(self, destination, remoteName):
+        '''
+        Actually performs a clone operation
+
+        :param destination:     The destination clone path
+        :param remoteName:      The name of the remote to create (if any)
+        '''
+        self.hg('clone', '.', destination)
+        if remoteName:
+            config = self.machine.cwd / '.hg' / 'hgrc'
+            hgconfig = ConfigParser()
+            hgconfig.readfp(config.open())
+            hgconfig.set('paths', remoteName, destination)
+            hgconfig.write(config.open('w'))
