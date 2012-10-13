@@ -90,9 +90,11 @@ def _DoSync(local, remote):
 
     appliedPatch = local.GetLastAppliedPatch()
     if appliedPatch:
+        print "Syncing mq repos"
         local.CommitMq()
         local.PushMqToRemote()
-        print "Pushed mq repository to remote"
+        print "Updating remote mq repo"
         remote.UpdateMq()
         remote.PushPatch(appliedPatch)
-        print "Updated remote mq repository and applied patches"
+
+    print "Ok!"

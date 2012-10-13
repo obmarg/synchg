@@ -248,11 +248,10 @@ class Repo(object):
 
         :param msg:     An optional commit message
         '''
-        args = []
-        if msg:
-            args = ['-m', 'synchg-commit']
+        if not msg:
+            msg = 'synchg-commit'
         try:
-            self.hg('commit', '--mq', *args)
+            self.hg('commit', '--mq', '-m', msg)
         except ProcessExecutionError as e:
             if e.retcode != 1:
                 #1 just means there's no changes
