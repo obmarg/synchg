@@ -29,8 +29,18 @@ def SyncRemote(host, name, localpath):
     print "Sync {0} -> {1}".format(name, host)
     with SshMachine(host) as remote:
         with plumbum.local.cwd(localpath):
+            local = Repo(plumbum.local, host)
+            rpath = remote.cwd / remote.env['HGROOT'] / name
+            if not rpath.exists():
+                print "Remote repository can't be found."
+                if yn('Do you want to create a clone?'):
+                    local.Clone('ssh://{0}/{1}/{2}'.format(
+                        host, remote.env['HGROOT'], name
+                        ))
+                else:
+                    raise AbortException
             with remote.cwd(remote.cwd / remote.env['HGROOT'] / name):
-                _DoSync(Repo(plumbum.local, host), Repo(remote))
+                _DoSync(local, Repo(remote))
 
 
 def _DoSync(local, remote):
