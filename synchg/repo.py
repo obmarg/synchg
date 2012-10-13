@@ -31,8 +31,7 @@ class Repo(object):
         '''
         self.hg = hg
         self.remote = remote
-        # Get the summary, to check if we have any un-committed changes
-        self.CheckCurrentRev()
+        self._currentRev = self._branch = None
         self.prevLevel = None
 
     @contextmanager
@@ -85,8 +84,28 @@ class Repo(object):
                 mqData = Repo.MqAppliedInfo(*match.group(2, 3))
         return Repo.SummaryInfo(commitData, mqData)
 
+    @property
+    def currentRev(self):
+        '''
+        Gets the current revision
+        This property is cached, so it may be out of date
+        '''
+        if not self._currentRev:
+            self._CheckCurrentRev()
+        return self._currentRev
+
+    @property
+    def branch(self):
+        '''
+        Gets the current branch
+        This property is cached, so it may be out of date
+        '''
+        if not self._branch:
+            self._CheckCurrentRev()
+        return self._branch
+
     @_CleanMq
-    def CheckCurrentRev( self ):
+    def _CheckCurrentRev( self ):
         ''' Gets the current revision and branch and stores it '''
 
         revMatch = re.search(
@@ -95,7 +114,7 @@ class Repo(object):
             )
         if revMatch is None:
             raise Exception("Could not get current revision using hg id")
-        self.currentRev, self.branch = revMatch.group(1, 2)
+        self._currentRev, self._branch = revMatch.group(1, 2)
 
     def _RunListCommand(self, command, headerLines=0):
         '''
@@ -241,6 +260,12 @@ class Repo(object):
         Updates the mq repository
         '''
         self.hg('update', '--mq')
+
+    def RefreshMq(self):
+        '''
+        Refreshes the current mq patch
+        '''
+        self.hg('qrefresh')
 
     def CommitMq(self, msg=None):
         '''

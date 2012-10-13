@@ -45,17 +45,16 @@ def _DoSync(local, remote):
     # First, check the state of each repository
     if remote.summary.commit.modified:
         # Changes might be lost on remote...
-        raise SyncError('Remote repository has changes')
+        raise SyncError('Remote repository has uncommitted changes')
 
     lsummary = local.summary
     if lsummary.commit.modified:
-        print "Local repository has uncomitted changes."
+        print "Local repository has uncommitted changes."
         if lsummary.mq.applied:
             # We can't push/pop patches to check remote is
             # in sync if we've got local changes, so prompt to refresh.
-            if yn('Do you want to qrefresh?'):
-                # TODO: qrefresh
-                raise Exception('Not implemented yet')
+            if yn('Do you want to refresh the current patch?'):
+                local.RefreshMq()
             else:
                 print "Ok.  Please run again after dealing with changes."
                 raise AbortException
@@ -74,6 +73,7 @@ def _DoSync(local, remote):
         if local.outgoings:
             incomings = local.incomings
             if incomings:
+                # Don't want to be creating new remote heads when we push
                 print "Changesets will be stripped from remote:"
                 for hash, desc in incomings:
                     if len(desc) > 50:
