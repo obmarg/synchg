@@ -251,8 +251,8 @@ class Repo(object):
 
         :param changeset:   The changeset id to update to
         '''
-        # TODO: Seems a bit inconsistent that this takes a changeset id/hash
-        # and other functions take a ChangesetInfo.  Maybe fix that
+        if isinstance(changeset, self.ChangesetInfo):
+            changeset = changeset.hash
         self.hg('update', changeset)
 
     def UpdateMq(self):
