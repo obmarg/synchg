@@ -5,23 +5,20 @@ from actions import SyncRemote, AbortException, SyncError
 class SyncHg(cli.Application):
     name = cli.SwitchAttr(
             ['n', '--name'],
-            help='The name of the local repository.'
-                 'Uses the current directory name by default'
+            help='The name of the repository.'
+                 'Uses the directory name by default'
             )
 
-    def main(self, action, remote, path=None):
-        if path:
-            path = local.cwd / path
+    def main(self, remote_host, local_path=None):
+        if local_path:
+            local_path = local.cwd / local_path
         else:
-            path = local.cwd
+            local_path = local.cwd
 
         if not self.name:
-            self.name = (local.cwd / path).basename
+            self.name = local_path.basename
 
-        if action == 'sync':
-            SyncRemote(remote, self.name, path)
-        else:
-            raise Exception('Unrecognised action: {0}'.format(action))
+        SyncRemote(remote_host, self.name, local_path)
 
 
 def run():
