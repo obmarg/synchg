@@ -52,7 +52,8 @@ class SyncHg(cli.Application):
         if not self.name:
             self.name = local_path.basename
 
-        SyncRemote(remote_host, self.name, local_path)
+        SyncRemote(remote_host, self.name, local_path,
+                   self.config.get('config', 'hgroot'))
 
     def _get_config(self, in_do_config=False):
         '''

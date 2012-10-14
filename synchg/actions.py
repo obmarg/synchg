@@ -18,24 +18,25 @@ class SyncError(Exception):
     pass
 
 
-def SyncRemote(host, name, localpath):
+def SyncRemote(host, name, localpath, remote_root):
     '''
     Syncs a remote repository
 
     :param host:        The hostname of the remote repository
     :param name:        The name of the project that is being synced
     :param localpath:   A plumbum path to the local repository
+    :param remote_root: The path to the remote root src dir
     '''
     print "Sync {0} -> {1}".format(name, host)
     with SshMachine(host) as remote:
         with plumbum.local.cwd(localpath):
             local = Repo(plumbum.local, host)
-            rpath = remote.cwd / remote.env['HGROOT'] / name
+            rpath = remote.cwd / remote_root / name
             if not rpath.exists():
                 print "Remote repository can't be found."
                 if yn('Do you want to create a clone?'):
                     local.Clone('ssh://{0}/{1}/{2}'.format(
-                        host, remote.env['HGROOT'], name
+                        host, remote_root, name
                         ))
                 else:
                     raise AbortException
