@@ -6,6 +6,10 @@ from actions import SyncRemote, AbortException, SyncError
 
 
 class SyncHg(cli.Application):
+    PROGNAME = 'SyncHg'
+    VERSION = '0.1'
+    DESCRIPTION = 'Syncs a remote mercurial repository'
+
     ConfigFileName = 'config.ini'
 
     def __init__(self, *pargs):
