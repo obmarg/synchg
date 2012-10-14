@@ -43,6 +43,20 @@ Synchg and it's python dependencies can be installed via pip::
   pip install synchg
 
 
+Preparing Repositories
+-----------------------
+
+Prior to running synchg for the first time it is recommended that you delete
+any remote repositories you intended to use it with, and allow synchg to
+perform the initial clone.  If you intend to use mq patches with synchg, you
+should also ensure you have run ``hg init --mq`` on your local repositories.
+
+It should also be noted that synchg regards remote repositories as "slaves" and
+will strip out any changesets it finds that are not in the local repository.
+You will be prompted before this happens, but the script will be unable to
+continue if you don't answer yes.  This is to avoid creating additional heads
+on the remote. 
+
 Usage
 -----
 
