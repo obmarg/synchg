@@ -28,8 +28,8 @@ class SyncHg(cli.Application):
 
     name = cli.SwitchAttr(
             ['n', '--name'],
-            help='The name of the repository on the remote. '
-                 'Uses the directory name by default'
+            help='The directory name of the repository on the remote. '
+                 'Uses the local directory name by default'
             )
 
     @cli.switch(['-c', '--config'])
