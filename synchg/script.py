@@ -12,9 +12,23 @@ class SyncHg(cli.Application):
         super(SyncHg, self).__init__(*pargs)
         self.config = ConfigParser()
 
+    def _get_config(self, in_do_config=False):
+        '''
+        Reads the configuration
+        '''
+        resources.init('obmarg', 'synchg')
+        self.config = ConfigParser()
+        contents = resources.user.read(self.ConfigFileName)
+        if not contents:
+            if not in_do_config:
+                print "Could not find config file"
+                self.do_config()
+        else:
+            self.config.readfp(resources.user.open(self.ConfigFileName))
+
     name = cli.SwitchAttr(
             ['n', '--name'],
-            help='The name of the repository. '
+            help='The name of the repository on the remote. '
                  'Uses the directory name by default'
             )
 
@@ -54,20 +68,6 @@ class SyncHg(cli.Application):
 
         SyncRemote(remote_host, self.name, local_path,
                    self.config.get('config', 'hgroot'))
-
-    def _get_config(self, in_do_config=False):
-        '''
-        Reads the configuration
-        '''
-        resources.init('obmarg', 'synchg')
-        self.config = ConfigParser()
-        contents = resources.user.read(self.ConfigFileName)
-        if not contents:
-            if not in_do_config:
-                print "Could not find config file"
-                self.do_config()
-        else:
-            self.config.readfp(resources.user.open(self.ConfigFileName))
 
 
 def run():
