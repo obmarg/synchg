@@ -3,11 +3,10 @@ from distribute_setup import use_setuptools
 use_setuptools()
 
 from setuptools import setup
-import ver
 
 setup(
     name='SyncHg',
-    version=ver.version,
+    version='0.1',
     url='http://github.com/obmarg/synchg/',
     license='BSD',
     author='Graeme Coupar',
