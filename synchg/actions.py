@@ -40,7 +40,7 @@ def SyncRemote(host, name, localpath, remote_root):
                         ))
                 else:
                     raise AbortException
-            with remote.cwd(remote.cwd / remote.env['HGROOT'] / name):
+            with remote.cwd(rpath):
                 _DoSync(local, Repo(remote))
 
 
