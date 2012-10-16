@@ -2,7 +2,7 @@ import os
 from ConfigParser import ConfigParser, Error as ConfigParserError
 from plumbum import cli, local
 from clint import resources
-from actions import SyncRemote, AbortException, SyncError
+from .sync import SyncRemote, AbortException, SyncError
 
 
 class SyncHg(cli.Application):
