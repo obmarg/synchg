@@ -1,8 +1,11 @@
+import sys
 import plumbum
 from plumbum import SshMachine
 from repo import Repo
 from utils import yn
 
+if sys.platform.startswith('win'):
+    from puttyssh import PuttySshMachine as SshMachine
 
 class AbortException(Exception):
     ''' An exception that's thrown when a user chooses to abort '''
