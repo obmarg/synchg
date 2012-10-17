@@ -1,4 +1,5 @@
 import os
+import synchg
 from ConfigParser import ConfigParser, Error as ConfigParserError
 from plumbum import cli, local
 from clint import resources
@@ -7,7 +8,7 @@ from .sync import SyncRemote, AbortException, SyncError
 
 class SyncHg(cli.Application):
     PROGNAME = 'SyncHg'
-    VERSION = '0.1'
+    VERSION = synchg.__version__
     DESCRIPTION = 'Syncs a remote mercurial repository'
 
     ConfigFileName = 'config.ini'
