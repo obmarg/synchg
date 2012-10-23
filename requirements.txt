@@ -1,2 +1,2 @@
-plumbum
+plumbum>=1.0.1
 clint
