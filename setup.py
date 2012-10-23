@@ -10,11 +10,9 @@ try:
 except ImportError:
     from distutils.core import setup
 
-import synchg
-
 setup(
     name='SyncHg',
-    version='0.9.2',
+    version='0.9.3',
     url='http://github.com/obmarg/synchg/',
     license='BSD',
     author='Graeme Coupar',
