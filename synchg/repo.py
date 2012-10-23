@@ -32,8 +32,9 @@ class Repo(object):
     def __init__(self, machine, remote=None):
         '''
         :param machine:     The plumbum machine object to use
-                            (can be local or remote)
-        :param remote:      The remote hostname to use
+                            (can be a local machine or remote machine)
+        :param remote:      The name of the remote repo to be used by
+                            push, pull and other operations.
         '''
         self.machine = machine
         self.hg = self.machine['hg']
