@@ -1,3 +1,7 @@
+0.9.3
+-----
+* Another pypi fix for importing synchg
+
 0.9.2
 -----
 * Fixed another issue with pypi installations, they depended on the synchg
