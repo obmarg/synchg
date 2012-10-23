@@ -7,6 +7,7 @@ from utils import yn
 if sys.platform.startswith('win'):
     from puttyssh import PuttySshMachine as SshMachine
 
+
 class AbortException(Exception):
     ''' An exception that's thrown when a user chooses to abort '''
     pass
@@ -101,7 +102,7 @@ def _DoSync(local, remote):
     print "Updating remote"
     remote.Update(local.currentRev)
 
-    appliedPatch = local.GetLastAppliedPatch()
+    appliedPatch = local.lastAppliedPatch
     if appliedPatch:
         print "Syncing mq repos"
         local.CommitMq()

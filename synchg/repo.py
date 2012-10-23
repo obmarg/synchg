@@ -43,7 +43,7 @@ class Repo(object):
         Returns a context manager that keeps the mq repository clean
         for it's lifetime
         '''
-        revertTo = self.GetLastAppliedPatch()
+        revertTo = self.lastAppliedPatch
         self.PopPatch()
         yield
         if revertTo:
@@ -184,9 +184,11 @@ class Repo(object):
                 headerLines=2
                 )
 
-    def GetLastAppliedPatch(self):
+    @property
+    def lastAppliedPatch(self):
         '''
         Gets the last applied mq patch (if there is one)
+
         :returns: A single mq patch name (or None)
         '''
         try:
@@ -222,7 +224,7 @@ class Repo(object):
         :param patch: Name of the patch to pop.  If None, all will be popped
         '''
         # Check there are some patches applied
-        level = self.GetLastAppliedPatch()
+        level = self.lastAppliedPatch
         if level:
             if patch is None:
                 patch = '-a'
