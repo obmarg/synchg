@@ -7,6 +7,7 @@ from plumbum import ProcessExecutionError
 
 __all__ = ['Repo']
 
+
 class Repo(object):
     '''
     This class provides an abstraction around running commands on a mercurial
@@ -57,8 +58,7 @@ class Repo(object):
         Decorator that ensures a function is always run with no patches applied
         Should only be applied on Repo methods
 
-        Params:
-            func - The function to decorate
+        :params func:   The function to decorate
         '''
         @functools.wraps(func)
         def InnerFunc(self, *pargs):
@@ -71,8 +71,8 @@ class Repo(object):
         '''
         Gets info from hg summary
 
-        :return:  A SummaryInfo namedtuple containing CommitChangeInfo &
-                  MqAppliedInfo
+        :return:    A :class:`SummaryInfo` containing :class:`CommitChangeInfo`
+                    & :class:`MqAppliedInfo`
         '''
         commitData = Repo.CommitChangeInfo(0, 0)
         mqData = None
@@ -95,6 +95,8 @@ class Repo(object):
         '''
         Gets the current revision
         This property is cached, so it may be out of date
+
+        :returns:   A string containing the current revision hash
         '''
         if not self._currentRev:
             self._CheckCurrentRev()
@@ -105,6 +107,8 @@ class Repo(object):
         '''
         Gets the current branch
         This property is cached, so it may be out of date
+
+        :returns:   A string containing the current branch name
         '''
         if not self._branch:
             self._CheckCurrentRev()
@@ -149,7 +153,7 @@ class Repo(object):
         Utility function that calls _RunListCommand and filters the results
         through ChangesetInfoRegexp
 
-        :returns:   A list of ChangesetInfo namedtuples
+        :returns:   A list of :class:`ChangesetInfo`
         '''
         lines = self._RunListCommand(*pargs, **kwargs)
         matches = (self.ChangesetInfoRegexp.match(line) for line in lines)
@@ -159,9 +163,10 @@ class Repo(object):
     @_CleanMq
     def outgoings(self):
         '''
-        Gets the outgoing changesets.
+        Gets the outgoing changesets to `self.remote`
 
-        :returns: A list of changeset hashes for the outgoing changesets
+        :returns:   A list containing :class:`ChangesetInfo` that represent
+                    the current outgoing changesets
         '''
         assert self.remote
         return self._GetChangesetInfoList(
@@ -175,9 +180,10 @@ class Repo(object):
     @_CleanMq
     def incomings(self):
         '''
-        Gets the incoming changesets.
+        Gets the incoming changesets from `self.remote`
 
-        :returns: A list of changeset hashes for the incoming changesets
+        :returns:   A list containing :class:`ChangesetInfo` that represent
+                    the current incoming changesets
         '''
         assert self.remote
         return self._GetChangesetInfoList(
@@ -206,12 +212,12 @@ class Repo(object):
 
     @_CleanMq
     def PushToRemote(self):
-        ''' Pushes to the remote repository '''
+        ''' Pushes to the remote repository at `self.remote`'''
         assert self.remote
         self.hg('push', '-b', self.branch, '-r', self.currentRev, self.remote)
 
     def PushMqToRemote(self):
-        ''' Pushes mq repo to the remote '''
+        ''' Pushes the mq repo to the remote at `self.remote` '''
         assert self.remote
         try:
             self.hg('push', '--mq', self.remote)
@@ -222,9 +228,10 @@ class Repo(object):
 
     def PopPatch(self, patch=None):
         '''
-        Pops an mq patch on local repo.
+        Pops mq patch(es)
 
-        :param patch: Name of the patch to pop.  If None, all will be popped
+        :param patch:   Name of the patch to pop to.
+                        If None, all will be popped
         '''
         # Check there are some patches applied
         level = self.lastAppliedPatch
@@ -235,9 +242,10 @@ class Repo(object):
 
     def PushPatch(self, patch=None):
         '''
-        Pushes an mq patch on local repo
+        Pushes mq patch(es)
 
-        :param patch: Name of the patch to push.  If None, all will be pushed
+        :param patch:   Name of the patch to push to.
+                        If None, all will be pushed
         '''
         if patch is None:
             patch = '-a'
@@ -246,9 +254,10 @@ class Repo(object):
     @_CleanMq
     def Strip(self, changesets):
         '''
-        Strips changesets from the repo with the strip command
+        Strips changesets from this repository
 
-        :param changesets:  A list of ChangesetInfo's to strip
+        :param changesets:  A list of :class:`ChangesetInfo`
+                            representing the changesets to strip
         '''
         self.hg('strip', *[cs.hash for cs in changesets])
 
@@ -257,7 +266,9 @@ class Repo(object):
         '''
         Updates to a specific changeset
 
-        :param changeset:   The changeset id to update to
+        :param changeset:   A changeset hash string, or
+                            :class:`ChangesetInfo` representing
+                            the changeset to update to
         '''
         if isinstance(changeset, self.ChangesetInfo):
             changeset = changeset.hash
@@ -265,7 +276,7 @@ class Repo(object):
 
     def UpdateMq(self):
         '''
-        Updates the mq repository
+        Updates the mq repository to tip
         '''
         self.hg('update', '--mq')
 
@@ -306,13 +317,6 @@ class Repo(object):
             with self.machine.cwd(patches):
                 mqdest = destination + '/.hg/patches'
                 self._DoClone(mqdest, remoteName)
-
-        # This all needs to go in different function, but:
-        # Need to hg update on remote
-        # Then hg qinit -c (on remote, and possibly local)
-        # then (if not already done) add mq remote
-        # then local hg commit -mq if needed
-        # then hg push --mq glencaple etc.
 
     def _DoClone(self, destination, remoteName):
         '''
