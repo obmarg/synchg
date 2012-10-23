@@ -1,8 +1,15 @@
 
-from distribute_setup import use_setuptools
-use_setuptools()
+try:
+    from distribute_setup import use_setuptools
+    use_setuptools()
+except ImportError:
+    pass
 
-from setuptools import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
 import synchg
 
 setup(
