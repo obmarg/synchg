@@ -10,8 +10,6 @@ try:
 except ImportError:
     from distutils.core import setup
 
-import synchg
-
 setup(
     name='SyncHg',
     version='0.9.2',
