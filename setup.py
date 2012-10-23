@@ -14,7 +14,7 @@ import synchg
 
 setup(
     name='SyncHg',
-    version=synchg.__version__,
+    version='0.9.2',
     url='http://github.com/obmarg/synchg/',
     license='BSD',
     author='Graeme Coupar',
