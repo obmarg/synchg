@@ -6,13 +6,15 @@
 Welcome to SyncHg's documentation!
 ==================================
 
+.. todo::
+    Add introduction etc. from README here.
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
    
-   intro
-   tutorial
+   usage
    reference
 
 
