@@ -31,14 +31,14 @@ setup(
             ]
         },
     classifiers=[
-        'Development Status :: 4 - Beta'
-        'Environment :: Console'
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Topic :: Utilities'
-        'Topic :: Software Development :: Version Control'
+        'Topic :: Utilities',
+        'Topic :: Software Development :: Version Control',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ]
 )
