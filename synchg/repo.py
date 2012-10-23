@@ -7,8 +7,13 @@ from plumbum import ProcessExecutionError
 
 __all__ = ['Repo']
 
-
 class Repo(object):
+    '''
+    This class provides an abstraction around running commands on a mercurial
+    repository.  It can be used against either a local or remote repository
+    depending on the ``machine`` parameter to the constructor.
+    '''
+
     SummaryInfo = namedtuple('SummaryInfo', ['commit', 'mq'])
     CommitChangeInfo = namedtuple(
             'CommitChangeInfo',
@@ -20,16 +25,14 @@ class Repo(object):
     HgTemplateParam = '{node}\\t{desc|firstline}\\n'
 
     # Contains details of a changeset
-    ChangesetInfo = namedtuple('ChangsetInfo', ['hash', 'desc'])
+    ChangesetInfo = namedtuple('ChangesetInfo', ['hash', 'desc'])
     ChangesetInfoRegexp = re.compile(r'^(?P<hash>\w+)\t(?P<desc>.*)$')
 
     def __init__(self, machine, remote=None):
         '''
-        Constructor
-
         :param machine:     The plumbum machine object to use
                             (can be local or remote)
-        :param remote:  The remote hostname to use
+        :param remote:      The remote hostname to use
         '''
         self.machine = machine
         self.hg = self.machine['hg']
