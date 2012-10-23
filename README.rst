@@ -1,12 +1,12 @@
 synchg
 ======
 
-When developing a cross platform application, it can be neccesary to transfer
-changes between different machines running different operating systems.
-Mercurials push & pull help a lot to make this process a lot simpler than it
-could be. However the process of syncing repositories can take quite a few
-steps if (like me) you rebase and collapse changesets quite frequently, and
-especially if you like to make use of the mq extension.
+When developing a cross platform application it can be neccesary to transfer
+changes between different machines in order to test changes out.  Mercurials
+push & pull help to make this process simpler, however keeping your
+repositories in sync is not neccesarily a single step process.  Particularly if
+you rebase and collapse changesets quite frequently, and especially if you like
+to make use of the mq extension.
 
 This script intends to make the process of syncing two mercurial repositories
 to exactly the same point as easy as possible, by taking care of all the steps
@@ -47,20 +47,20 @@ Preparing Repositories
 -----------------------
 
 Prior to running synchg for the first time it is recommended that you delete
-any remote repositories you intended to use it with, and allow synchg to
+any remote repositories you intend to use it with, and allow synchg to
 perform the initial clone.  If you intend to use mq patches with synchg, you
 should also ensure you have run ``hg init --mq`` on your local repositories.
 
-It should also be noted that synchg regards remote repositories as "slaves" and
-will strip out any changesets it finds that are not in the local repository.
-You will be prompted before this happens, but the script will be unable to
-continue if you don't answer yes.  This is to avoid creating additional heads
-on the remote. 
+It should be noted that synchg regards remote repositories as "slaves" and will
+strip out any changesets it finds that are not in the local repository.  You
+will be prompted before this happens, but the script will be unable to continue
+if you don't answer yes.  This is to avoid creating additional heads on the
+remote. 
 
 Usage
 -----
 
-Synchg is intended to be run from the command line::
+Synchg should be run from the command line::
 
   synchg remote_host [local_path=None]
 
@@ -72,7 +72,7 @@ More options can be found by running::
 
   synchg --help
 
-On first run, synchg will prompt you for some configuration options:
+On first run, you will be prompted for some configuration options:
 
 * Remote source directory - this is the path on the remote under which all your
   repositories should be found
