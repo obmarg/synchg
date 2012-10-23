@@ -240,3 +240,8 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+# -- My custom options --------------------------------------------------------
+
+autoclass_content = 'both'
+
