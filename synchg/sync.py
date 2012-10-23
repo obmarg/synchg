@@ -9,7 +9,11 @@ if sys.platform.startswith('win'):
 
 
 class AbortException(Exception):
-    ''' An exception that's thrown when a user chooses to abort '''
+    '''
+    An exception that's thrown when a user chooses to abort.  This should be
+    caught and ignored at the start of the program to allow users to abort at
+    prompts
+    '''
     pass
 
 
