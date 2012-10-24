@@ -1,11 +1,7 @@
-import sys
 import plumbum
-from plumbum import SshMachine
+from remote import RemoteMachine
 from repo import Repo
 from utils import yn
-
-if sys.platform.startswith('win'):
-    from puttyssh import PuttySshMachine as SshMachine
 
 
 class AbortException(Exception):
@@ -32,7 +28,7 @@ def SyncRemote(host, name, localpath, remote_root):
     :param remote_root: The path to the remote root src dir
     '''
     print "Sync {0} -> {1}".format(name, host)
-    with SshMachine(host) as remote:
+    with RemoteMachine(host) as remote:
         with plumbum.local.cwd(localpath):
             local = Repo(plumbum.local, host)
             rpath = remote.cwd / remote_root / name
