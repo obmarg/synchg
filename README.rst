@@ -1,29 +1,15 @@
-synchg
-======
-
-When developing a cross platform application it can be neccesary to transfer
-changes between different machines in order to test changes out.  Mercurials
-push & pull help to make this process simpler, however keeping your
-repositories in sync is not neccesarily a single step process.  Particularly if
-you rebase and collapse changesets quite frequently, and especially if you like
-to make use of the mq extension.
+When working with Mercurial it can be neccesary to transfer in progress changes
+between different machines.  Mercurials push & pull help to make this process
+simpler however keeping your repositories in sync is not neccesarily a single
+step process.  Particularly if you rebase and collapse changesets quite
+frequently and especially if you like to make use of the mq extension.
 
 This script intends to make the process of syncing two mercurial repositories
 to exactly the same point as easy as possible, by taking care of all the steps
 neccesary in a single command.
 
-Currently it can:
-
-* Clone a new remote repository
-* Refresh the local mq patch
-* Strip superflous changesets from the remote repository
-* Push to and update the remote repository
-* Commit to the local mq repository
-* Push to and update the remote mq repository
-* Ensure the remote repository has the correct mq patches pushed 
-
 Requirements
-------------
+-------------
 
 Python 2.7 & Mercurial 2.3 are recommended, though others may work.
 
@@ -42,25 +28,24 @@ Synchg and it's python dependencies can be installed via pip::
   
   pip install synchg
 
+Using SyncHg
+-------------
 
-Preparing Repositories
------------------------
+Before using synchg on a repository you should ensure that your environment is
+set up correctly.  If you intend to use mq patches with synchg, then you should
+run ``hg init --mq`` on each local repository before you attempt to use it with
+synchg.
 
-Prior to running synchg for the first time it is recommended that you delete
-any remote repositories you intend to use it with, and allow synchg to
-perform the initial clone.  If you intend to use mq patches with synchg, you
-should also ensure you have run ``hg init --mq`` on your local repositories.
+It's recommended that you use synchg to make the initial clone to your remote
+machine. This way it can take steps to add neccesary settings to the local
+repository.  However, if you wish to use synchg with an existing clone of your
+repository, then read the section below entitled
+`Using With Existing Clones`_.
 
-It should be noted that synchg regards remote repositories as "slaves" and will
-strip out any changesets it finds that are not in the local repository.  You
-will be prompted before this happens, but the script will be unable to continue
-if you don't answer yes.  This is to avoid creating additional heads on the
-remote. 
+Running The Script
+__________________
 
-Usage
------
-
-Synchg should be run from the command line::
+The synchg script should be run from the command line::
 
   synchg remote_host [local_path=None]
 
@@ -68,11 +53,40 @@ Where ``remote_host`` is the host you wish to sync with and ``local_path`` is
 the optional path to the local mercurial repository (if missing, the current
 directory will be assumed)
 
-More options can be found by running::
+Information on more options can be found by running::
 
   synchg --help
 
-On first run, you will be prompted for some configuration options:
+.. CAUTION::
 
-* Remote source directory - this is the path on the remote under which all your
-  repositories should be found
+    Synchg regards remote repositories as "slaves" and will strip out any
+    changesets it finds that are not in the local repository.  You will be
+    prompted before this happens, but the script will be unable to continue if
+    you don't answer yes.
+
+Configuration 
+_______________
+
+On first run of synchg you will be prompted with some configuration options:
+
+Remote source directory
+    This is the path on the remote under which all your repositories should be
+    found.
+    For example, if you have repositories at ``/repo/one/`` and ``/repo/two/``
+    then you would set this to ``/repo/``
+
+If you want to change the configuration of synchg, then simply run ``synchg
+-c`` to run the config process again.
+
+Using With Existing Clones
+__________________________
+
+Though it's recommended that you allow synchg to perfomr the initial clone of a
+repository, it is possible to use it with existing clones.  You simply need to
+make sure that the remote repository is listed as a remote in the .hgrc for
+your local repository.  The remote should be named using the hostname of the
+remote machine.
+
+If you intend to use mq patches, this will also need to be done with the mq
+repository.
+
