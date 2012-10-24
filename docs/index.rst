@@ -6,22 +6,121 @@
 Welcome to SyncHg's documentation!
 ==================================
 
-.. todo::
-    Add introduction etc. from README here.
+When working with Mercurial it can be neccesary to transfer in progress changes
+between different machines.  Mercurials push & pull help to make this process
+simpler however keeping your repositories in sync is not neccesarily a single
+step process.  Particularly if you rebase and collapse changesets quite
+frequently and especially if you like to make use of the mq extension.
 
-Contents:
+This script intends to make the process of syncing two mercurial repositories
+to exactly the same point as easy as possible, by taking care of all the steps
+neccesary in a single command.
 
-.. toctree::
-   :maxdepth: 2
-   
-   usage
-   reference
+Requirements
+-------------
 
+Python 2.7 & Mercurial 2.3 are recommended, though others may work.
 
-Indices and tables
-==================
+Synchg depends on these python packages:
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+* `Plumbum <https://github.com/tomerfiliba/plumbum>`_
+* `Clint <https://github.com/kennethreitz/clint>`_
 
+It also requires the `mq <http://mercurial.selenic.com/wiki/MqExtension>`_
+mercurial extension is enabled on any remote machines it is used with.
+
+Installation
+-------------
+
+Synchg and it's python dependencies can be installed via pip::
+  
+  pip install synchg
+
+Using SyncHg
+-------------
+
+Before using synchg on a repository you should ensure that your environment is
+set up correctly.  If you intend to use mq patches with synchg, then you should
+run ``hg init --mq`` on each local repository before you attempt to use it with
+synchg.
+
+It's recommended that you use synchg to make the initial clone to your remote
+machine. This way it can take steps to add neccesary settings to the local
+repository.  However, if you wish to use synchg with an existing clone of your
+repository, then read the section below entitled
+`Using With Existing Clones`_.
+
+Running The Script
+__________________
+
+The synchg script should be run from the command line::
+
+  synchg remote_host [local_path=None]
+
+Where ``remote_host`` is the host you wish to sync with and ``local_path`` is
+the optional path to the local mercurial repository (if missing, the current
+directory will be assumed)
+
+Information on more options can be found by running::
+
+  synchg --help
+
+.. CAUTION::
+
+    Synchg regards remote repositories as "slaves" and will strip out any
+    changesets it finds that are not in the local repository.  You will be
+    prompted before this happens, but the script will be unable to continue if
+    you don't answer yes.
+
+Configuration 
+_______________
+
+On first run of synchg you will be prompted with some configuration options:
+
+Remote source directory
+    This is the path on the remote under which all your repositories should be
+    found.
+    For example, if you have repositories at ``/repo/one/`` and ``/repo/two/``
+    then you would set this to ``/repo/``
+
+If you want to change the configuration of synchg, then simply run ``synchg
+-c`` to run the config process again.
+
+Using With Existing Clones
+__________________________
+
+Though it's recommended that you allow synchg to perfomr the initial clone of a
+repository, it is possible to use it with existing clones.  You simply need to
+make sure that the remote repository is listed as a remote in the .hgrc for
+your local repository.  The remote should be named using the hostname of the
+remote machine.
+
+If you intend to use mq patches, this will also need to be done with the mq
+repository.
+
+SyncHg API 
+-------------
+
+Synchg also exposes a simple python API that can be used to integrate synchg
+functionality into other python projects such as build scripts.
+
+The SyncHg ReferenceAPI can be used easily, simply by calling the
+:func:`synchg.sync.SyncRemote` function.  For example:
+
+  TODO: add a simple code example (I'm thinking prompts, then a synchg call)
+
+.. synchg.sync:
+
+Syncing Utilities (synchg.sync)
+_______________________________
+
+.. automodule:: synchg.sync
+    :members:
+
+.. synchg.repo:
+
+Repository Control (synchg.repo)
+________________________________
+
+.. automodule:: synchg.repo
+    :members:
