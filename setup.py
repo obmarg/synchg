@@ -27,8 +27,8 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'plumbum',
-        'clint'
+        'plumbum>=1.0.1',
+        'clint>=0.3.1'
     ],
     entry_points={
         'console_scripts': [
