@@ -1,3 +1,16 @@
+.. raw:: html
+
+    <div style="float:right; margin-left:1em; padding: 1em 2em 1em 2em; background-color: #efefef;
+        border-radius: 5px; border-width: thin; border-style: dotted; border-color: #0C3762;">
+    <strong>Quick Links</strong><br/>
+    <ul>
+    <li><a href="#installation" title="Jump to install">Installation</a></li>
+    <li><a href="#using-synchg" title="Jump to usage info">Usage</a></li>
+    <li><a href="#synchg-api" title="Jump to API reference">API Reference</a></li>
+    <li><a href='https://github.com/obmarg/synchg/issues'>Issue Tracker</a></li>
+    </ul>
+    </div>
+
 .. include:: ../README.rst
 
 SyncHg API 
@@ -9,7 +22,7 @@ functionality into other python projects such as build scripts.
 The SyncHg ReferenceAPI can be used easily, simply by calling the
 :func:`synchg.sync.SyncRemote` function.  For example:
 
-  TODO: add a simple code example (I'm thinking prompts, then a synchg call)
+.. literalinclude:: examples/apiexample.py
 
 .. synchg.sync:
 
