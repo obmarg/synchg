@@ -1,17 +1,14 @@
-When working with Mercurial it can be necessary to transfer in progress changes
-between different machines.  Mercurials push & pull help to make this process
-simpler however keeping your repositories in sync is not necessarily a single
-step process.  Particularly if you rebase and collapse changesets quite
-frequently and especially if you like to make use of the mq extension.
+Ever had to keep two mercurial repositories on different machines in sync?
+Mercurials push & pull help to make this fairly easy, but if you make use of
+mercurial queues or the histedit extension then it can quickly become tedious.
+That's where synchg comes in.  
 
-This script intends to make the process of syncing two mercurial repositories
-to exactly the same point as easy as possible, by taking care of all the steps
-necessary in a single command.
+Synchg intends to make syncing two mercurial repositories as simple as possible.  Simply run a command, and synchg will take care of the rest.
 
 Requirements
--------------
+============
 
-Python 2.7 & Mercurial 2.3 are recommended, though others may work.
+Python 2.7 & Mercurial 2.3 are recommended, though others will probably work.
 
 Synchg depends on these python packages:
 
@@ -22,14 +19,14 @@ It also requires the `mq <http://mercurial.selenic.com/wiki/MqExtension>`_
 mercurial extension is enabled on any remote machines it is used with.
 
 Installation
--------------
+=============
 
 Synchg and it's python dependencies can be installed via pip::
   
   pip install synchg
 
 Using SyncHg
--------------
+=============
 
 Before using synchg on a repository you should ensure that your environment is
 set up correctly.  If you intend to use mq patches with synchg, then you should
@@ -43,7 +40,7 @@ repository, then read the section below entitled
 `Using With Existing Clones`_.
 
 Running The Script
-__________________
+------------------
 
 The synchg script should be run from the command line::
 
@@ -65,7 +62,7 @@ Information on more options can be found by running::
     you don't answer yes.
 
 Configuration 
-_______________
+---------------
 
 On first run of synchg you will be prompted with some configuration options:
 
@@ -79,7 +76,7 @@ If you want to change the configuration of synchg, then simply run ``synchg
 -c`` to run the config process again.
 
 Using With Existing Clones
-__________________________
+--------------------------
 
 Though it's recommended that you allow synchg to perform the initial clone of a
 repository, it is possible to use it with existing clones.  You simply need to
