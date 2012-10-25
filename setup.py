@@ -13,7 +13,7 @@ except ImportError:
 setup(
     name='SyncHg',
     version='0.9.5',
-    url='http://github.com/obmarg/synchg/',
+    url='http://synchg.readthedocs.org/',
     license='BSD',
     author='Graeme Coupar',
     author_email='grambo@grambo.me.uk',
