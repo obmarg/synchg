@@ -26,7 +26,7 @@ Installation
 
 Synchg and it's python dependencies can be installed via pip::
   
-  pip install synchg
+  $ pip install synchg
 
 Using SyncHg
 =============
@@ -47,7 +47,7 @@ Running The Script
 
 The synchg script should be run from the command line::
 
-  synchg remote_host [local_path=None]
+  $ synchg remote_host [local_path=None]
 
 Where ``remote_host`` is the host you wish to sync with and ``local_path`` is
 the optional path to the local mercurial repository (if missing, the current
@@ -55,7 +55,7 @@ directory will be assumed)
 
 Information on more options can be found by running::
 
-  synchg --help
+  $ synchg --help
 
 .. CAUTION::
 
