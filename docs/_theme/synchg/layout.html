@@ -1,0 +1,13 @@
+{#
+    synchg/layout.html
+    ~~~~~~~~~~~~~~~~~
+
+    Sphinx layout template for the synchg theme.
+#}
+{% extends "haiku/layout.html" %}
+
+{% block haikuheader %}
+	<h1 class='heading'>{{ project|e }} {{ release|e }}</h1>
+	<h2 class="heading">{{ header_subtitle|e }}</h2>
+{% endblock %}
+
