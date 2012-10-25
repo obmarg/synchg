@@ -7,6 +7,7 @@
     <li><a href="#installation" title="Jump to install">Installation</a></li>
     <li><a href="#using-synchg" title="Jump to usage info">Usage</a></li>
     <li><a href="#synchg-api" title="Jump to API reference">API Reference</a></li>
+    <li><a href='https://github.com/obmarg/synchg'>GitHub</a></li>
     <li><a href='https://github.com/obmarg/synchg/issues'>Issue Tracker</a></li>
     </ul>
     </div>
