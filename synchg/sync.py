@@ -1,3 +1,9 @@
+'''
+This module provides the actual syncing functionality for SyncHg.  It's
+functions can be called by imported and called by other libraries if they wish
+to make use of SyncHg functionality.
+'''
+
 import sys
 import plumbum
 from plumbum import SshMachine
@@ -9,7 +15,11 @@ if sys.platform.startswith('win'):
 
 
 class AbortException(Exception):
-    ''' An exception that's thrown when a user chooses to abort '''
+    '''
+    An exception that's thrown when a user chooses to abort.  This should be
+    caught and ignored at the start of the program to allow users to abort at
+    prompts
+    '''
     pass
 
 
@@ -24,12 +34,16 @@ class SyncError(Exception):
 
 def SyncRemote(host, name, localpath, remote_root):
     '''
-    Syncs a remote repository
+    Syncs a remote repository.  This function should be called to kick off a
+    sync
 
     :param host:        The hostname of the remote repository
-    :param name:        The name of the project that is being synced
+    :param name:        The name of the project that is being synced.
+                        This parameter will be appended to the remote_root
+                        to find the remote repository.
     :param localpath:   A plumbum path to the local repository
-    :param remote_root: The path to the remote root src dir
+    :param remote_root: The path to the parent directory of the
+                        remote repository
     '''
     print "Sync {0} -> {1}".format(name, host)
     with SshMachine(host) as remote:
