@@ -42,7 +42,8 @@ def SyncRemote(host, name, localpath, remote_root):
                         This parameter will be appended to the remote_root
                         to find the remote repository.
     :param localpath:   A plumbum path to the local repository
-    :param remote_root: The path to the remote root source dir
+    :param remote_root: The path to the parent directory of the
+                        remote repository
     '''
     print "Sync {0} -> {1}".format(name, host)
     with SshMachine(host) as remote:

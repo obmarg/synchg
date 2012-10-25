@@ -15,8 +15,11 @@ Synchg depends on these python packages:
 * `Plumbum <https://github.com/tomerfiliba/plumbum>`_
 * `Clint <https://github.com/kennethreitz/clint>`_
 
-It also requires the `mq <http://mercurial.selenic.com/wiki/MqExtension>`_
-mercurial extension is enabled on any remote machines it is used with.
+It also requires:
+
+* Access to an SSH server on the remote machine(s)
+* That the `mq <http://mercurial.selenic.com/wiki/MqExtension>`_ extension is
+  enabled on the remote machine(s)
 
 Installation
 =============
