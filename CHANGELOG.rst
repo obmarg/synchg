@@ -1,3 +1,8 @@
+0.9.5
+-----
+* Produced proper documentation using sphinx
+* No functional changes
+
 0.9.4
 -----
 * Removed dependency on my putty/plumbum hacks on windows, as the upstream
