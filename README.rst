@@ -1,12 +1,12 @@
-When working with Mercurial it can be neccesary to transfer in progress changes
+When working with Mercurial it can be necessary to transfer in progress changes
 between different machines.  Mercurials push & pull help to make this process
-simpler however keeping your repositories in sync is not neccesarily a single
+simpler however keeping your repositories in sync is not necessarily a single
 step process.  Particularly if you rebase and collapse changesets quite
 frequently and especially if you like to make use of the mq extension.
 
 This script intends to make the process of syncing two mercurial repositories
 to exactly the same point as easy as possible, by taking care of all the steps
-neccesary in a single command.
+necessary in a single command.
 
 Requirements
 -------------
@@ -37,7 +37,7 @@ run ``hg init --mq`` on each local repository before you attempt to use it with
 synchg.
 
 It's recommended that you use synchg to make the initial clone to your remote
-machine. This way it can take steps to add neccesary settings to the local
+machine. This way it can take steps to add necessary settings to the local
 repository.  However, if you wish to use synchg with an existing clone of your
 repository, then read the section below entitled
 `Using With Existing Clones`_.
@@ -81,7 +81,7 @@ If you want to change the configuration of synchg, then simply run ``synchg
 Using With Existing Clones
 __________________________
 
-Though it's recommended that you allow synchg to perfomr the initial clone of a
+Though it's recommended that you allow synchg to perform the initial clone of a
 repository, it is possible to use it with existing clones.  You simply need to
 make sure that the remote repository is listed as a remote in the .hgrc for
 your local repository.  The remote should be named using the hostname of the
