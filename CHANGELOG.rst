@@ -1,3 +1,8 @@
+0.9.4
+-----
+* Removed dependency on my putty/plumbum hacks on windows, as the upstream
+  issue in plumbum has now been fixed.
+
 0.9.3
 -----
 * Another pypi fix for importing synchg

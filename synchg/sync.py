@@ -4,14 +4,10 @@ functions can be called by imported and called by other libraries if they wish
 to make use of SyncHg functionality.
 '''
 
-import sys
 import plumbum
-from plumbum import SshMachine
+from remote import RemoteMachine
 from repo import Repo
 from utils import yn
-
-if sys.platform.startswith('win'):
-    from puttyssh import PuttySshMachine as SshMachine
 
 
 class AbortException(Exception):
@@ -46,7 +42,7 @@ def SyncRemote(host, name, localpath, remote_root):
                         remote repository
     '''
     print "Sync {0} -> {1}".format(name, host)
-    with SshMachine(host) as remote:
+    with RemoteMachine(host) as remote:
         with plumbum.local.cwd(localpath):
             local = Repo(plumbum.local, host)
             rpath = remote.cwd / remote_root / name

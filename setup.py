@@ -12,7 +12,7 @@ except ImportError:
 
 setup(
     name='SyncHg',
-    version='0.9.3',
+    version='0.9.4',
     url='http://github.com/obmarg/synchg/',
     license='BSD',
     author='Graeme Coupar',
@@ -27,8 +27,8 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'plumbum',
-        'clint'
+        'plumbum>=1.0.1',
+        'clint>=0.3.1'
     ],
     entry_points={
         'console_scripts': [
