@@ -20,7 +20,7 @@ SyncHg API
 Synchg also exposes a simple python API that can be used to integrate synchg
 functionality into other python projects such as build scripts.
 
-The SyncHg ReferenceAPI can be used easily, simply by calling the
+The SyncHg API can be used easily, simply by calling the
 :func:`synchg.sync.SyncRemote` function.  For example:
 
 .. literalinclude:: examples/apiexample.py
