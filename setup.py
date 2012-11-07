@@ -12,7 +12,7 @@ except ImportError:
 
 setup(
     name='SyncHg',
-    version='0.9.6',
+    version='0.9.7',
     url='http://synchg.readthedocs.org/',
     license='BSD',
     author='Graeme Coupar',
