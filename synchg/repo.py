@@ -76,7 +76,7 @@ class Repo(object):
                     & :class:`MqAppliedInfo`
         '''
         commitData = Repo.CommitChangeInfo(0, 0)
-        mqData = None
+        mqData = Repo.MqAppliedInfo(0, 0)
         commitRegexp = re.compile(
                 r'^commit:\s+((\d+) modified(, (\d+) unknown)?)?'
                 )
