@@ -1,3 +1,7 @@
+0.9.6
+-----
+* Fixed an issue preventing use with repositories without mq enabled
+
 0.9.5
 -----
 * Produced proper documentation using sphinx

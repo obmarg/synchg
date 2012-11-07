@@ -315,14 +315,19 @@ tt {
     font-family: 'Ubuntu Mono', sans-serif;
 }
 
+.highlight-python .highlight {
+    background-color: #FFF;
+}
+
 pre {
     font-family: 'Ubuntu Mono', sans-serif;
-    border-color: #0c3762;
-    border-style: dotted;
-    border-width: thin;
-    margin: 0 0 12px 0;
+    border-color: #DDD;
+    border-style: solid;
+    border-width: 1px;
+    margin: 1em 2em;
     padding: 0.8em;
     background-color: #f0f0f0;
+    border-radius: 6px;
 }
 
 hr {
