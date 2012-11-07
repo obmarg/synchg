@@ -303,13 +303,16 @@ class Repo(object):
                 raise
 
     @_CleanMq
-    def Clone(self, destination, remoteName=None):
+    def Clone(self, destination, createRemote=True):
         '''
         Clones the repository to a different location
 
         :param destination:     The destination clone path
-        :param remoteName:      If set a remote will be created with this name
+        :param createRemote:    If set a remote will be created in the local
+                                hgrc with the name the class was initialised
+                                with.
         '''
+        remoteName = self.remote if createRemote else None
         self._DoClone(destination, remoteName)
         patches = self.machine.cwd / '.hg' / 'patches'
         if patches.exists():
