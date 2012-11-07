@@ -80,7 +80,9 @@ class Repo(object):
         commitRegexp = re.compile(
                 r'^commit:\s+((\d+) modified(, (\d+) unknown)?)?'
                 )
-        mqRegexp = re.compile(r'^mq:\s+((\d+) applied, (\d+) unapplied)?')
+        mqRegexp = re.compile(
+                r'^mq:\s+((\d+) applied,?\s*)?((\d+) unapplied)?'
+                )
         lines = self.hg('summary').splitlines()
         for line in lines:
             match = commitRegexp.search( line )
@@ -88,7 +90,7 @@ class Repo(object):
                 commitData = Repo.CommitChangeInfo(*match.group( 2, 4 ))
             match = mqRegexp.search( line )
             if match:
-                mqData = Repo.MqAppliedInfo(*match.group(2, 3))
+                mqData = Repo.MqAppliedInfo(*match.group(2, 4))
         return Repo.SummaryInfo(commitData, mqData)
 
     @property
