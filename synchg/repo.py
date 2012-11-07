@@ -333,6 +333,9 @@ class Repo(object):
         if remoteName:
             config = self.machine.cwd / '.hg' / 'hgrc'
             hgconfig = ConfigParser()
-            hgconfig.readfp(config.open())
+            if config.exists():
+                hgconfig.readfp(config.open())
+            else:
+                hgconfig.add_section('paths')
             hgconfig.set('paths', remoteName, destination)
             hgconfig.write(config.open('w'))
