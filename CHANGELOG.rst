@@ -1,3 +1,8 @@
+0.9.7
+-----
+* Fixed an issue where remote repositories in hgrc were not set up properly on
+  initial clone
+
 0.9.6
 -----
 * Fixed an issue preventing use with repositories without mq enabled
