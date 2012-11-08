@@ -1,4 +1,5 @@
-from mock import MagicMock, create_autospec, sentinel, call, patch, DEFAULT
+from mock import MagicMock, create_autospec, sentinel, call, patch
+from mock import DEFAULT, ANY
 from should_dsl import should, should_not
 from plumbum.local_machine import LocalMachine, Workdir
 from plumbum.commands import ProcessExecutionError
@@ -54,23 +55,18 @@ class TestRepoSummary:
 
     def it_handles_no_unknowns(self):
         self.doTest('commit: 10 modified', '', ((10, 0), (0, 0)))
-        pass
 
     def it_handles_modified_and_unknown(self):
         self.doTest('commit: 10 modified, 20 unknown', '', ((10, 20), (0, 0)))
-        pass
 
     def it_handles_mq_applied(self):
         self.doTest('', 'mq: 3 applied', ((0, 0), (3, 0)))
-        pass
 
     def it_handles_mq_unapplied(self):
         self.doTest('', 'mq: 4 unapplied', ((0, 0), (0, 4)))
-        pass
 
     def it_handles_mq_applied_and_unapplied(self):
         self.doTest('', 'mq: 10 applied, 4 unapplied', ((0, 0), (10, 4)))
-        pass
 
 
 class TestRepoCurrentRev:
@@ -132,7 +128,6 @@ class TestRepoLastAppliedPatch:
         repo = CreateRepo()
         repo.hg.side_effect = ProcessExecutionError('', 1, '', '')
         repo.lastAppliedPatch |should| be(None)
-        pass
 
     def should_propagate_other_errors(self):
         repo = CreateRepo()
@@ -181,7 +176,6 @@ class TestRepoPushMqToRemote:
         repo = CreateRepo(sentinel.remote)
         repo.hg.side_effect = ProcessExecutionError('', 2, '', '')
         repo.PushMqToRemote |should| throw(ProcessExecutionError)
-        pass
 
 
 class TestRepoPopPatch:
@@ -254,16 +248,25 @@ class TestRepoRefreshMq:
 
 class TestRepoCommitMq:
     def it_has_a_default_message(self):
-        pass
+        repo = CreateRepo()
+        repo.CommitMq()
+        repo.hg.assert_called_with('commit', '--mq', '-m', ANY)
 
     def it_accepts_a_message(self):
-        pass
+        repo = CreateRepo()
+        repo.CommitMq(sentinel.message)
+        repo.hg.assert_called_with('commit', '--mq', '-m', sentinel.message)
 
     def it_ignores_no_change_return_code(self):
-        pass
+        repo = CreateRepo()
+        repo.hg.side_effect = ProcessExecutionError('', 1, '', '')
+        repo.CommitMq()
+        repo.hg |should| be_called
 
     def it_propagates_other_errors(self):
-        pass
+        repo = CreateRepo()
+        repo.hg.side_effect = ProcessExecutionError('', 2, '', '')
+        repo.CommitMq |should| throw(ProcessExecutionError)
 
 
 class TestRepoClone:
@@ -274,7 +277,6 @@ class TestRepoClone:
         # TODO: would be nice to use should_dsl for this.
         #       (Probably with should aliased as was or something)
         repo.hg.assert_called_with('clone', '.', sentinel.destination)
-        pass
 
     def it_clones_mq_repo_if_there(self):
         repo = CreateRepo()
