@@ -132,15 +132,23 @@ class TestRepoPushPatch:
 
 class TestRepoStrip:
     def it_strips_some_changesets(self):
-        pass
+        repo = CreateRepo()
+        data = [Repo.ChangesetInfo(i, sentinel.desc) for i in range(5)]
+        repo.Strip(data)
+        repo.hg.assert_called_with('strip', 0, 1, 2, 3, 4)
 
 
 class TestRepoUpdate:
     def it_accepts_changeset_info(self):
-        pass
+        repo = CreateRepo()
+        data = Repo.ChangesetInfo(sentinel.hash, sentinel.desc)
+        repo.Update(data)
+        repo.hg.assert_called_with('update', sentinel.hash)
 
     def it_accepts_changeset_hash(self):
-        pass
+        repo = CreateRepo()
+        repo.Update(sentinel.hash)
+        repo.hg.assert_called_with('update', sentinel.hash)
 
 
 class TestRepoUpdateMq:
