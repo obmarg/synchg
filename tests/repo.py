@@ -5,7 +5,7 @@ from plumbum.commands import ProcessExecutionError
 from synchg.repo import Repo
 
 # Keep pep8 happy
-be_called = throw = None
+equal_to = be = be_called = throw = None
 
 
 def CreateRepo(remote=None, clean_mq=False):
@@ -63,11 +63,23 @@ class TestRepoCurrentRev:
 
 
 class TestRepoCurrentBranch:
-    def it_only_checks_once(self):
-        pass
+    @patch.object(Repo, '_CheckCurrentRev')
+    def it_only_checks_once(self, checkCurrentRev):
+        repo = CreateRepo()
+        repo._currentRev = sentinel.rev
+        repo.currentRev |should| be(sentinel.rev)
+        checkCurrentRev |should_not| be_called
 
-    def it_parses_correct_branch(self):
-        pass
+    @patch.object(Repo, '_CheckCurrentRev')
+    def it_parses_correct_branch(self, checkCurrentRev):
+        repo = CreateRepo()
+
+        def SideEffect():
+            repo._currentRev = sentinel.rev
+
+        checkCurrentRev.side_effect = SideEffect
+        repo.currentRev |should| be(sentinel.rev)
+        checkCurrentRev |should| be_called
 
 
 class TestRepoOutgoings:
@@ -91,13 +103,25 @@ class TestRepoIncomings:
 
 class TestRepoLastAppliedPatch:
     def should_return_none_if_mq_disabled(self):
-        pass
+        repo = CreateRepo()
+        repo.hg.side_effect = ProcessExecutionError('', 255, '', '')
+        repo.lastAppliedPatch |should| be(None)
 
     def should_return_none_if_no_patches(self):
+        repo = CreateRepo()
+        repo.hg.side_effect = ProcessExecutionError('', 1, '', '')
+        repo.lastAppliedPatch |should| be(None)
         pass
 
-    def should_return_last_patch_in_list(self):
-        pass
+    def should_propagate_other_errors(self):
+        repo = CreateRepo()
+        repo.hg.side_effect = ProcessExecutionError('', 2, '', '')
+        (lambda: repo.lastAppliedPatch) |should| throw(ProcessExecutionError)
+
+    def should_return_a_patch(self):
+        repo = CreateRepo()
+        repo.hg.return_value = 'something\n\n'
+        repo.lastAppliedPatch |should| equal_to('something')
 
 
 class TestRepoPushToRemote:
