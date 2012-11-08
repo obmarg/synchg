@@ -1,7 +1,24 @@
-import mox
+from mock import MagicMock, create_autospec, sentinel, call, patch
+from plumbum.local_machine import LocalMachine, Workdir
+from synchg.repo import Repo
 
 
-class TestRepoCleanMq(mox.MoxTestBase):
+def CreateRepo(remote=None, clean_mq=False):
+    machine = create_autospec(LocalMachine, instance=True)
+    machine.cwd = create_autospec(Workdir, instance=True)
+    repo = Repo(machine, remote)
+    if not clean_mq:
+        # Mock away CleanMq to stop it messing with things
+        repo.CleanMq = MagicMock()
+    return repo
+
+
+class TestRepoConstructor:
+    # TODO: Implement this stuff
+    pass
+
+
+class TestRepoCleanMq:
     def should_push_after_done(self):
         pass
 
@@ -12,7 +29,7 @@ class TestRepoCleanMq(mox.MoxTestBase):
         pass
 
 
-class TestRepoSummary(mox.MoxTestBase):
+class TestRepoSummary:
     def it_handles_no_mq(self):
         pass
 
@@ -32,7 +49,7 @@ class TestRepoSummary(mox.MoxTestBase):
         pass
 
 
-class TestRepoCurrentRev(mox.MoxTestBase):
+class TestRepoCurrentRev:
     def it_only_checks_once(self):
         pass
 
@@ -40,7 +57,7 @@ class TestRepoCurrentRev(mox.MoxTestBase):
         pass
 
 
-class TestRepoCurrentBranch(mox.MoxTestBase):
+class TestRepoCurrentBranch:
     def it_only_checks_once(self):
         pass
 
@@ -48,7 +65,7 @@ class TestRepoCurrentBranch(mox.MoxTestBase):
         pass
 
 
-class TestRepoOutgoings(mox.MoxTestBase):
+class TestRepoOutgoings:
     def it_ignores_empty_list_return_code(self):
         pass
 
@@ -56,7 +73,7 @@ class TestRepoOutgoings(mox.MoxTestBase):
         pass
 
 
-class TestRepoIncomings(mox.MoxTestBase):
+class TestRepoIncomings:
     def it_parses_changeset_info(self):
         pass
 
@@ -67,7 +84,7 @@ class TestRepoIncomings(mox.MoxTestBase):
         pass
 
 
-class TestRepoLastAppliedPatch(mox.MoxTestBase):
+class TestRepoLastAppliedPatch:
     def should_return_none_if_mq_disabled(self):
         pass
 
@@ -78,12 +95,12 @@ class TestRepoLastAppliedPatch(mox.MoxTestBase):
         pass
 
 
-class TestRepoPushToRemote(mox.MoxTestBase):
+class TestRepoPushToRemote:
     def should_push_branch_and_rev(self):
         pass
 
 
-class TestRepoPushMqToRemote(mox.MoxTestBase):
+class TestRepoPushMqToRemote:
     def should_push_mq(self):
         pass
 
@@ -94,7 +111,7 @@ class TestRepoPushMqToRemote(mox.MoxTestBase):
         pass
 
 
-class TestRepoPopPatch(mox.MoxTestBase):
+class TestRepoPopPatch:
     def it_only_pops_if_needed(self):
         pass
 
@@ -105,7 +122,7 @@ class TestRepoPopPatch(mox.MoxTestBase):
         pass
 
 
-class TestRepoPushPatch(mox.MoxTestBase):
+class TestRepoPushPatch:
     def it_pushes_all_by_default(self):
         pass
 
@@ -113,12 +130,12 @@ class TestRepoPushPatch(mox.MoxTestBase):
         pass
 
 
-class TestRepoStrip(mox.MoxTestBase):
+class TestRepoStrip:
     def it_strips_some_changesets(self):
         pass
 
 
-class TestRepoUpdate(mox.MoxTestBase):
+class TestRepoUpdate:
     def it_accepts_changeset_info(self):
         pass
 
@@ -126,17 +143,17 @@ class TestRepoUpdate(mox.MoxTestBase):
         pass
 
 
-class TestRepoUpdateMq(mox.MoxTestBase):
+class TestRepoUpdateMq:
     def it_updates_mq(self):
         pass
 
 
-class TestRepoRefreshMq(mox.MoxTestBase):
+class TestRepoRefreshMq:
     def it_refreshes_mq(self):
         pass
 
 
-class TestRepoCommitMq(mox.MoxTestBase):
+class TestRepoCommitMq:
     def it_has_a_default_message(self):
         pass
 
@@ -150,9 +167,53 @@ class TestRepoCommitMq(mox.MoxTestBase):
         pass
 
 
-class TestRepoClone(mox.MoxTestBase):
+class TestRepoClone:
     def it_clones_main_repo(self):
+        repo = CreateRepo()
+        (repo.machine.cwd / '.hg' / 'patches').exists.return_value = False
+        repo.Clone(sentinel.destination, False)
+        # TODO: would be nice to use should_dsl for this.
+        #       (Probably with should aliased as was or something)
+        repo.hg.assert_called_with('clone', '.', sentinel.destination)
         pass
 
     def it_clones_mq_repo_if_there(self):
-        pass
+        repo = CreateRepo()
+        (repo.machine.cwd / '.hg' / 'patches').exists.return_value = True
+        repo.Clone('machine', False)
+        # TODO: would be nice to use should_dsl for this.
+        #       (Probably with should aliased as was or something)
+        print repo.hg.mock_calls
+        repo.hg.assert_has_calls([
+                call('clone', '.', 'machine'),
+                call('clone', '.', 'machine' + '/.hg/patches')
+                ])
+
+    @patch('synchg.repo.ConfigParser', autospec=True)
+    def it_sets_up_remote(self, config_parser):
+        repo = CreateRepo(sentinel.remote)
+        (repo.machine.cwd / '.hg' / 'patches').exists.return_value = False
+        (repo.machine.cwd / '.hg' / 'hgrc').exists.return_value = True
+        (repo.machine.cwd / '.hg' / 'hgrc').open.return_value = sentinel.config
+        repo.Clone('dest')
+        config_parser.assert_has_calls([
+                call(),
+                call().readfp(sentinel.config),
+                call().set('paths', sentinel.remote, 'dest'),
+                call().write(sentinel.config)
+                ])
+
+    @patch('synchg.repo.ConfigParser', autospec=True)
+    def it_creates_hgrc_when_setting_up_remote(self, config_parser):
+        repo = CreateRepo(sentinel.remote)
+        (repo.machine.cwd / '.hg' / 'patches').exists.return_value = False
+        (repo.machine.cwd / '.hg' / 'hgrc').exists.return_value = False
+        (repo.machine.cwd / '.hg' / 'hgrc').open.return_value = sentinel.config
+        repo.Clone('dest')
+        assert not config_parser.readfp.called
+        config_parser.assert_has_calls([
+                call(),
+                call().add_section('paths'),
+                call().set('paths', sentinel.remote, 'dest'),
+                call().write(sentinel.config)
+                ])
