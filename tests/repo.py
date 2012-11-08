@@ -1,4 +1,4 @@
-from mock import MagicMock, create_autospec, sentinel, call, patch
+from mock import MagicMock, create_autospec, sentinel, call, patch, DEFAULT
 from should_dsl import should, should_not
 from plumbum.local_machine import LocalMachine, Workdir
 from plumbum.commands import ProcessExecutionError
@@ -24,14 +24,27 @@ class TestRepoConstructor:
 
 
 class TestRepoCleanMq:
-    def should_push_after_done(self):
-        pass
+    @patch.multiple(
+            Repo, lastAppliedPatch=sentinel.patch,
+            PopPatch=DEFAULT, PushPatch=DEFAULT
+            )
+    def should_push_after_done(self, PopPatch, PushPatch):
+        repo = CreateRepo(clean_mq=True)
+        with repo.CleanMq():
+            PopPatch |should| be_called
+            PushPatch |should_not| be_called
+        PushPatch.assert_called_with(sentinel.patch)
 
-    def should_not_push_if_no_patches(self):
-        pass
-
-    def should_allow_recursion(self):
-        pass
+    @patch.multiple(
+            Repo, lastAppliedPatch=None,
+            PopPatch=DEFAULT, PushPatch=DEFAULT
+            )
+    def should_not_push_if_no_patches(self, PopPatch, PushPatch):
+        repo = CreateRepo(clean_mq=True)
+        with repo.CleanMq():
+            PopPatch |should| be_called
+            PushPatch |should_not| be_called
+        PushPatch |should_not| be_called
 
 
 class TestRepoSummary:
