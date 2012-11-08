@@ -18,11 +18,6 @@ def CreateRepo(remote=None, clean_mq=False):
     return repo
 
 
-class TestRepoConstructor:
-    # TODO: Implement this stuff
-    pass
-
-
 class TestRepoCleanMq:
     @patch.multiple(
             Repo, lastAppliedPatch=sentinel.patch,
@@ -245,12 +240,16 @@ class TestRepoUpdate:
 
 class TestRepoUpdateMq:
     def it_updates_mq(self):
-        pass
+        repo = CreateRepo()
+        repo.UpdateMq()
+        repo.hg.assert_called_with('update', '--mq')
 
 
 class TestRepoRefreshMq:
     def it_refreshes_mq(self):
-        pass
+        repo = CreateRepo()
+        repo.RefreshMq()
+        repo.hg.assert_called_with('qrefresh')
 
 
 class TestRepoCommitMq:
