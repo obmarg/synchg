@@ -8,33 +8,6 @@ from plumbum import ProcessExecutionError
 __all__ = ['Repo']
 
 
-class RepoConfig(object):
-    '''
-    This class provides an abstraction around repository configuration files
-    '''
-
-    def __init__(self, path):
-        '''
-        :param path:    Plumbum path to the repository
-        '''
-        self._config = ConfigParser()
-        self._path = path / '.hg' / 'hgrc'
-        if path.exists():
-            self._config.readfp(path.open())
-        else:
-            self._config.add_section('paths')
-
-    def AddRemote(self, name, destination):
-        '''
-        Adds a remote to the config, or overwrites if it already exists
-
-        :param name:        The name of the remote
-        :param destination: The destination path of the remote
-        '''
-        self._config.set('paths', name, destination)
-        self._config.write(self._path.open('w'))
-
-
 class Repo(object):
     '''
     This class provides an abstraction around running commands on a mercurial
@@ -66,6 +39,10 @@ class Repo(object):
         self.machine = machine
         self.hg = self.machine['hg']
         self.remote = remote
+        # TODO: Really need to figure out how to copy the path
+        #       here, since at the moment it's just another name
+        #       for cwd :(
+        self._path = self.machine.cwd
         self._currentRev = self._branch = None
         self.prevLevel = None
         self._config = self._mqconfig = None
@@ -157,7 +134,7 @@ class Repo(object):
         :returns: A ``RepoConfig`` class
         '''
         if not self._config:
-            self._config = RepoConfig(self.machine.cwd)
+            self._config = RepoConfig(self._path)
         return self._config
 
     @property
@@ -168,7 +145,7 @@ class Repo(object):
         :returns A ``RepoConfig`` class
         '''
         if not self._mqconfig:
-            self._mqconfig = RepoConfig(self.machine.cwd / '.hg' / 'patches')
+            self._mqconfig = RepoConfig(self._path / '.hg' / 'patches')
         return self._mqconfig
 
     @_CleanMq
@@ -368,24 +345,52 @@ class Repo(object):
                                 with.
         '''
         remoteName = self.remote if createRemote else None
-        self._DoClone(destination, remoteName)
-        patches = self.machine.cwd / '.hg' / 'patches'
+        self._DoClone(self.config, destination, remoteName)
+        patches = self._path / '.hg' / 'patches'
         if patches.exists():
             # Clone mq repository
             # TODO: Possibly do a sanity check and call hg init --mq if needed
             with self.machine.cwd(patches):
                 mqdest = destination + '/.hg/patches'
-                self._DoClone(mqdest, remoteName)
+                self._DoClone(self.mqconfig, mqdest, remoteName)
 
-    def _DoClone(self, destination, remoteName):
+    def _DoClone(self, config, destination, remoteName):
         '''
         Actually performs a clone operation
 
+        :param config:          A configuration object to update
         :param destination:     The destination clone path
         :param remoteName:      The name of the remote to create (if any)
         '''
         self.hg('clone', '.', destination)
         if remoteName:
-            configPath = self.machine.cwd / '.hg' / 'hgrc'
-            config = RepoConfig(configPath)
             config.AddRemote(remoteName, destination)
+
+
+class RepoConfig(object):
+    '''
+    This class provides an abstraction around repository configuration files
+    '''
+
+    def __init__(self, path):
+        '''
+        :param path:    Plumbum path to the repository
+        '''
+        self._config = ConfigParser()
+        self._path = path / '.hg' / 'hgrc'
+        if self._path.exists():
+            self._config.readfp(path.open())
+        else:
+            self._config.add_section('paths')
+
+    def AddRemote(self, name, destination):
+        '''
+        Adds a remote to the config, or overwrites if it already exists
+
+        :param name:        The name of the remote
+        :param destination: The destination path of the remote
+        '''
+        self._config.set('paths', name, destination)
+        self._config.write(self._path.open('w'))
+
+

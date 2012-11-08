@@ -307,17 +307,19 @@ class TestRepoCommitMq:
 
 
 class TestRepoClone:
+    @patch.object(Repo, 'config', None)
     def it_clones_main_repo(self):
         repo = CreateRepo()
-        (repo.machine.cwd / '.hg' / 'patches').exists.return_value = False
+        (repo._path / '.hg' / 'patches').exists.return_value = False
         repo.Clone(sentinel.destination, False)
         # TODO: would be nice to use should_dsl for this.
         #       (Probably with should aliased as was or something)
         repo.hg.assert_called_with('clone', '.', sentinel.destination)
 
+    @patch.multiple(Repo, config=None, mqconfig=None)
     def it_clones_mq_repo_if_there(self):
         repo = CreateRepo()
-        (repo.machine.cwd / '.hg' / 'patches').exists.return_value = True
+        (repo._path / '.hg' / 'patches').exists.return_value = True
         repo.Clone('machine', False)
         # TODO: would be nice to use should_dsl for this.
         #       (Probably with should aliased as was or something)
@@ -330,23 +332,23 @@ class TestRepoClone:
     @patch('synchg.repo.ConfigParser', autospec=True)
     def it_sets_up_remote(self, config_parser):
         repo = CreateRepo(sentinel.remote)
-        (repo.machine.cwd / '.hg' / 'patches').exists.return_value = False
-        (repo.machine.cwd / '.hg' / 'hgrc').exists.return_value = True
-        (repo.machine.cwd / '.hg' / 'hgrc').open.return_value = sentinel.config
+        (repo._path / '.hg' / 'patches').exists.return_value = False
+        (repo._path / '.hg' / 'hgrc').exists.return_value = True
+        (repo._path / '.hg' / 'hgrc').open.return_value = sentinel.config
         repo.Clone('dest')
         config_parser.assert_has_calls([
                 call(),
                 call().readfp(sentinel.config),
                 call().set('paths', sentinel.remote, 'dest'),
                 call().write(sentinel.config)
-                ])
+                ], any_order=True)
 
     @patch('synchg.repo.ConfigParser', autospec=True)
     def it_creates_hgrc_when_setting_up_remote(self, config_parser):
         repo = CreateRepo(sentinel.remote)
-        (repo.machine.cwd / '.hg' / 'patches').exists.return_value = False
-        (repo.machine.cwd / '.hg' / 'hgrc').exists.return_value = False
-        (repo.machine.cwd / '.hg' / 'hgrc').open.return_value = sentinel.config
+        (repo._path / '.hg' / 'patches').exists.return_value = False
+        (repo._path / '.hg' / 'hgrc').exists.return_value = False
+        (repo._path / '.hg' / 'hgrc').open.return_value = sentinel.config
         repo.Clone('dest')
         assert not config_parser.readfp.called
         config_parser.assert_has_calls([
