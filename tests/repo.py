@@ -112,22 +112,36 @@ class TestRepoPushMqToRemote:
 
 
 class TestRepoPopPatch:
+    @patch.object(Repo, 'lastAppliedPatch', None)
     def it_only_pops_if_needed(self):
-        pass
+        repo = CreateRepo()
+        repo.PopPatch(sentinel.patch)
+        repo.PopPatch()
+        assert not repo.hg.called
 
+    @patch.object(Repo, 'lastAppliedPatch', True)
     def it_pops_all_by_default(self):
-        pass
+        repo = CreateRepo()
+        repo.PopPatch()
+        repo.hg.assert_called_with('qpop', '-a')
 
+    @patch.object(Repo, 'lastAppliedPatch', True)
     def it_pops_a_specific_patch_if_requested(self):
-        pass
+        repo = CreateRepo()
+        repo.PopPatch(sentinel.patch)
+        repo.hg.assert_called_with('qpop', sentinel.patch)
 
 
 class TestRepoPushPatch:
     def it_pushes_all_by_default(self):
-        pass
+        repo = CreateRepo()
+        repo.PushPatch()
+        repo.hg.assert_called_with('qpush', '-a')
 
     def it_pushes_a_specific_patch_if_requested(self):
-        pass
+        repo = CreateRepo()
+        repo.PushPatch(sentinel.patch)
+        repo.hg.assert_called_with('qpush', sentinel.patch)
 
 
 class TestRepoStrip:
