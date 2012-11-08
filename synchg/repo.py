@@ -204,11 +204,10 @@ class Repo(object):
         :returns: A single mq patch name (or None)
         '''
         try:
-            patches = self._RunListCommand(self.hg['qapplied'])
-            if patches:
-                return patches[-1]
+            return self.hg('qtop').strip()
         except ProcessExecutionError as e:
-            if e.retcode != 255:
+            if e.retcode not in [1, 255]:
+                # 1 means no patches
                 # 255 means mq is probably disabled
                 raise
         return None
