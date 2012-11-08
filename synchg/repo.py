@@ -15,10 +15,10 @@ class RepoConfig(object):
 
     def __init__(self, path):
         '''
-        :param path:    Plumbum path to the config file
+        :param path:    Plumbum path to the repository
         '''
         self._config = ConfigParser()
-        self._path = path
+        self._path = path / '.hg' / 'hgrc'
         if path.exists():
             self._config.readfp(path.open())
         else:
@@ -68,6 +68,7 @@ class Repo(object):
         self.remote = remote
         self._currentRev = self._branch = None
         self.prevLevel = None
+        self._config = self._mqconfig = None
 
     @contextmanager
     def CleanMq(self):
@@ -147,6 +148,28 @@ class Repo(object):
         if not self._branch:
             self._CheckCurrentRev()
         return self._branch
+
+    @property
+    def config(self):
+        '''
+        Gets the configuration for this repository
+
+        :returns: A ``RepoConfig`` class
+        '''
+        if not self._config:
+            self._config = RepoConfig(self.machine.cwd)
+        return self._config
+
+    @property
+    def mqconfig(self):
+        '''
+        Gets the configuration for the mq repository
+
+        :returns A ``RepoConfig`` class
+        '''
+        if not self._mqconfig:
+            self._mqconfig = RepoConfig(self.machine.cwd / '.hg' / 'patches')
+        return self._mqconfig
 
     @_CleanMq
     def _CheckCurrentRev( self ):
