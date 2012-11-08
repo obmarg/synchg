@@ -8,6 +8,33 @@ from plumbum import ProcessExecutionError
 __all__ = ['Repo']
 
 
+class RepoConfig(object):
+    '''
+    This class provides an abstraction around repository configuration files
+    '''
+
+    def __init__(self, path):
+        '''
+        :param path:    Plumbum path to the config file
+        '''
+        self._config = ConfigParser()
+        self._path = path
+        if path.exists():
+            self._config.readfp(path.open())
+        else:
+            self._config.add_section('paths')
+
+    def AddRemote(self, name, destination):
+        '''
+        Adds a remote to the config, or overwrites if it already exists
+
+        :param name:        The name of the remote
+        :param destination: The destination path of the remote
+        '''
+        self._config.set('paths', name, destination)
+        self._config.write(self._path.open('w'))
+
+
 class Repo(object):
     '''
     This class provides an abstraction around running commands on a mercurial
@@ -336,11 +363,6 @@ class Repo(object):
         '''
         self.hg('clone', '.', destination)
         if remoteName:
-            config = self.machine.cwd / '.hg' / 'hgrc'
-            hgconfig = ConfigParser()
-            if config.exists():
-                hgconfig.readfp(config.open())
-            else:
-                hgconfig.add_section('paths')
-            hgconfig.set('paths', remoteName, destination)
-            hgconfig.write(config.open('w'))
+            configPath = self.machine.cwd / '.hg' / 'hgrc'
+            config = RepoConfig(configPath)
+            config.AddRemote(remoteName, destination)
