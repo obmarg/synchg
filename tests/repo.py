@@ -1,6 +1,11 @@
 from mock import MagicMock, create_autospec, sentinel, call, patch
+from should_dsl import should, should_not
 from plumbum.local_machine import LocalMachine, Workdir
+from plumbum.commands import ProcessExecutionError
 from synchg.repo import Repo
+
+# Keep pep8 happy
+be_called = throw = None
 
 
 def CreateRepo(remote=None, clean_mq=False):
@@ -96,18 +101,41 @@ class TestRepoLastAppliedPatch:
 
 
 class TestRepoPushToRemote:
+    def should_assert_if_no_remote(self):
+        repo = CreateRepo()
+        repo.PushMqToRemote |should| throw(AssertionError)
+
+    @patch.multiple(
+            Repo, branch=sentinel.branch, currentRev=sentinel.currentRev
+            )
     def should_push_branch_and_rev(self):
-        pass
+        repo = CreateRepo(sentinel.remote)
+        repo.PushToRemote()
+        repo.hg.assert_called_with(
+                'push', '-b', sentinel.branch, '-r', sentinel.currentRev,
+                sentinel.remote
+                )
 
 
 class TestRepoPushMqToRemote:
+    def should_assert_if_no_remote(self):
+        repo = CreateRepo()
+        repo.PushMqToRemote |should| throw(AssertionError)
+
     def should_push_mq(self):
-        pass
+        repo = CreateRepo(sentinel.remote)
+        repo.PushMqToRemote()
+        repo.hg.assert_called_with('push', '--mq', sentinel.remote)
 
     def should_ignore_no_outgoings_return_code(self):
-        pass
+        repo = CreateRepo(sentinel.remote)
+        repo.hg.side_effect = ProcessExecutionError('', 1, '', '')
+        repo.PushMqToRemote |should_not| throw(ProcessExecutionError)
 
     def should_propagate_other_errors(self):
+        repo = CreateRepo(sentinel.remote)
+        repo.hg.side_effect = ProcessExecutionError('', 2, '', '')
+        repo.PushMqToRemote |should| throw(ProcessExecutionError)
         pass
 
 
@@ -117,7 +145,7 @@ class TestRepoPopPatch:
         repo = CreateRepo()
         repo.PopPatch(sentinel.patch)
         repo.PopPatch()
-        assert not repo.hg.called
+        repo.hg |should_not| be_called
 
     @patch.object(Repo, 'lastAppliedPatch', True)
     def it_pops_all_by_default(self):
