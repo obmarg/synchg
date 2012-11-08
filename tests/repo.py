@@ -100,22 +100,59 @@ class TestRepoBranch:
 
 
 class TestRepoOutgoings:
-    def it_ignores_empty_list_return_code(self):
-        pass
+    def it_requires_remote(self):
+        repo = CreateRepo()
+        (lambda: repo.outgoings) |should| throw(AssertionError)
 
+    @patch.multiple(Repo, branch=None, currentRev=None)
     def it_parses_changeset_info(self):
-        pass
+        data = '\n\ntsd345678123454\tA nice changeset\n123\tAnother changeset'
+        repo = CreateRepo(sentinel.remote)
+        repo.hg[''].return_value = data
+        repo.outgoings |should| equal_to([
+            ('tsd345678123454', 'A nice changeset'),
+            ('123', 'Another changeset')
+            ])
+
+    @patch.multiple(Repo, branch=None, currentRev=None)
+    def it_ignores_empty_list_return_code(self):
+        repo = CreateRepo(sentinel.remote)
+        repo.hg[''].side_effect = ProcessExecutionError('', 1, '', '')
+        repo.outgoings |should| equal_to([])
+
+    @patch.multiple(Repo, branch=None, currentRev=None)
+    def should_propagate_other_errors(self):
+        repo = CreateRepo(sentinel.remote)
+        repo.hg[''].side_effect = ProcessExecutionError('', 2, '', '')
+        (lambda: repo.outgoings) |should| throw(ProcessExecutionError)
 
 
 class TestRepoIncomings:
+    def it_requires_remote(self):
+        repo = CreateRepo()
+        (lambda: repo.incomings) |should| throw(AssertionError)
+
+    @patch.multiple(Repo, branch=None, currentRev=None)
     def it_parses_changeset_info(self):
-        pass
+        data = '\n\ntsd345678123454\tA nice changeset\n123\tAnother changeset'
+        repo = CreateRepo(sentinel.remote)
+        repo.hg[''].return_value = data
+        repo.incomings |should| equal_to([
+            ('tsd345678123454', 'A nice changeset'),
+            ('123', 'Another changeset')
+            ])
 
+    @patch.multiple(Repo, branch=None, currentRev=None)
     def it_ignores_empty_list_return_code(self):
-        pass
+        repo = CreateRepo(sentinel.remote)
+        repo.hg[''].side_effect = ProcessExecutionError('', 1, '', '')
+        repo.incomings |should| equal_to([])
 
+    @patch.multiple(Repo, branch=None, currentRev=None)
     def should_propagate_other_errors(self):
-        pass
+        repo = CreateRepo(sentinel.remote)
+        repo.hg[''].side_effect = ProcessExecutionError('', 2, '', '')
+        (lambda: repo.incomings) |should| throw(ProcessExecutionError)
 
 
 class TestRepoLastAppliedPatch:
