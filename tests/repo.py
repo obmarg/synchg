@@ -35,22 +35,33 @@ class TestRepoCleanMq:
 
 
 class TestRepoSummary:
-    def it_handles_no_mq(self):
-        pass
+    def doTest(self, commitLine, mqLine, expected):
+        repo = CreateRepo()
+        repo.hg.return_value = '\n'.join([commitLine, mqLine])
+        repo.summary |should| equal_to(expected)
+        repo.hg.assert_called_with('summary')
+
+    def it_handles_no_data(self):
+        self.doTest('', '', ((0, 0), (0, 0)))
 
     def it_handles_no_unknowns(self):
+        self.doTest('commit: 10 modified', '', ((10, 0), (0, 0)))
         pass
 
     def it_handles_modified_and_unknown(self):
+        self.doTest('commit: 10 modified, 20 unknown', '', ((10, 20), (0, 0)))
         pass
 
     def it_handles_mq_applied(self):
+        self.doTest('', 'mq: 3 applied', ((0, 0), (3, 0)))
         pass
 
     def it_handles_mq_unapplied(self):
+        self.doTest('', 'mq: 4 unapplied', ((0, 0), (0, 4)))
         pass
 
     def it_handles_mq_applied_and_unapplied(self):
+        self.doTest('', 'mq: 10 applied, 4 unapplied', ((0, 0), (10, 4)))
         pass
 
 

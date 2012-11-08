@@ -87,10 +87,14 @@ class Repo(object):
         for line in lines:
             match = commitRegexp.search( line )
             if match:
-                commitData = Repo.CommitChangeInfo(*match.group( 2, 4 ))
+                commitData = Repo.CommitChangeInfo(
+                        int(match.group(2) or 0), int(match.group(4) or 0)
+                        )
             match = mqRegexp.search( line )
             if match:
-                mqData = Repo.MqAppliedInfo(*match.group(2, 4))
+                mqData = Repo.MqAppliedInfo(
+                        int(match.group(2) or 0), int(match.group(4) or 0)
+                        )
         return Repo.SummaryInfo(commitData, mqData)
 
     @property
