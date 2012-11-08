@@ -55,14 +55,6 @@ class TestRepoSummary:
 
 
 class TestRepoCurrentRev:
-    def it_only_checks_once(self):
-        pass
-
-    def it_parses_correct_revision(self):
-        pass
-
-
-class TestRepoCurrentBranch:
     @patch.object(Repo, '_CheckCurrentRev')
     def it_only_checks_once(self, checkCurrentRev):
         repo = CreateRepo()
@@ -70,16 +62,26 @@ class TestRepoCurrentBranch:
         repo.currentRev |should| be(sentinel.rev)
         checkCurrentRev |should_not| be_called
 
-    @patch.object(Repo, '_CheckCurrentRev')
-    def it_parses_correct_branch(self, checkCurrentRev):
+    def it_parses_correct_revision(self):
         repo = CreateRepo()
+        repo.hg.return_value = 'abc43256712f 4.7'
+        repo.currentRev |should| equal_to('abc43256712f')
+        repo.hg.assert_called_with('id', '-i', '-b')
 
-        def SideEffect():
-            repo._currentRev = sentinel.rev
 
-        checkCurrentRev.side_effect = SideEffect
-        repo.currentRev |should| be(sentinel.rev)
-        checkCurrentRev |should| be_called
+class TestRepoBranch:
+    @patch.object(Repo, '_CheckCurrentRev')
+    def it_only_checks_once(self, checkCurrentRev):
+        repo = CreateRepo()
+        repo._branch = sentinel.branch
+        repo.branch |should| be(sentinel.branch)
+        checkCurrentRev |should_not| be_called
+
+    def it_parses_correct_branch(self):
+        repo = CreateRepo()
+        repo.hg.return_value = 'abc43256712f 4.7'
+        repo.branch |should| equal_to('4.7')
+        repo.hg.assert_called_with('id', '-i', '-b')
 
 
 class TestRepoOutgoings:
