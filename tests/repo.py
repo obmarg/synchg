@@ -1,9 +1,9 @@
-from mock import MagicMock, create_autospec, sentinel, call, patch
+from mock import Mock, MagicMock, create_autospec, sentinel, call, patch
 from mock import DEFAULT, ANY
 from should_dsl import should, should_not
 from plumbum.local_machine import LocalMachine, Workdir
 from plumbum.commands import ProcessExecutionError
-from synchg.repo import Repo
+from synchg.repo import Repo, RepoConfig
 
 # Keep pep8 happy
 equal_to = be = be_called = throw = None
@@ -329,31 +329,65 @@ class TestRepoClone:
                 call('clone', '.', 'machine' + '/.hg/patches')
                 ])
 
-    @patch('synchg.repo.ConfigParser', autospec=True)
-    def it_sets_up_remote(self, config_parser):
+    @patch.multiple(
+            Repo,
+            config=Mock(spec_set=RepoConfig),
+            mqconfig=Mock(spec_set=RepoConfig)
+            )
+    def it_sets_up_remote(self):
         repo = CreateRepo(sentinel.remote)
         (repo._path / '.hg' / 'patches').exists.return_value = False
-        (repo._path / '.hg' / 'hgrc').exists.return_value = True
-        (repo._path / '.hg' / 'hgrc').open.return_value = sentinel.config
         repo.Clone('dest')
+        repo.config.AddRemote.assert_called_with(sentinel.remote, 'dest')
+        repo.mqconfig.AddRemote |should_not| be_called
+
+    @patch.multiple(
+            Repo, config=Mock(spec_set=RepoConfig),
+            mqconfig=Mock(spec_set=RepoConfig)
+            )
+    def it_sets_up_mq_remote(self):
+        repo = CreateRepo(sentinel.remote)
+        (repo._path / '.hg' / 'patches').exists.return_value = True
+        repo.Clone('dest')
+        repo.mqconfig.AddRemote.assert_called_with(
+                sentinel.remote, 'dest/.hg/patches'
+                )
+        repo.config.AddRemote |should| be_called
+
+
+class TestRepoConfig(object):
+    @patch('synchg.repo.ConfigParser', autospec=True)
+    def it_reads_config_if_there(self, config_parser):
+        path = MagicMock()
+        (path / '.hg' / 'hgrc').exists.return_value = True
+        (path / '.hg' / 'hgrc').open.return_value = sentinel.config
+        RepoConfig(path)
         config_parser.assert_has_calls([
                 call(),
-                call().readfp(sentinel.config),
-                call().set('paths', sentinel.remote, 'dest'),
-                call().write(sentinel.config)
-                ], any_order=True)
+                call().readfp(sentinel.config)
+                ])
 
     @patch('synchg.repo.ConfigParser', autospec=True)
-    def it_creates_hgrc_when_setting_up_remote(self, config_parser):
-        repo = CreateRepo(sentinel.remote)
-        (repo._path / '.hg' / 'patches').exists.return_value = False
-        (repo._path / '.hg' / 'hgrc').exists.return_value = False
-        (repo._path / '.hg' / 'hgrc').open.return_value = sentinel.config
-        repo.Clone('dest')
-        assert not config_parser.readfp.called
+    def it_creates_paths_section_if_needed(self, config_parser):
+        path = MagicMock()
+        (path / '.hg' / 'hgrc').exists.return_value = False
+        RepoConfig(path)
         config_parser.assert_has_calls([
                 call(),
-                call().add_section('paths'),
-                call().set('paths', sentinel.remote, 'dest'),
+                call().add_section('paths')
+                ])
+
+    @patch('synchg.repo.ConfigParser', autospec=True)
+    def it_allows_add_remote(self, config_parser):
+        path = MagicMock()
+        (path / '.hg' / 'hgrc').exists.return_value = False
+        (path / '.hg' / 'hgrc').open.return_value = sentinel.config
+        config = RepoConfig(path)
+        config_parser.reset_mock()
+        config.AddRemote(sentinel.remote, sentinel.destination)
+        config_parser.assert_has_calls([
+                call().set('paths', sentinel.remote, sentinel.destination),
                 call().write(sentinel.config)
                 ])
+
+

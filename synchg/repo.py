@@ -379,7 +379,7 @@ class RepoConfig(object):
         self._config = ConfigParser()
         self._path = path / '.hg' / 'hgrc'
         if self._path.exists():
-            self._config.readfp(path.open())
+            self._config.readfp(self._path.open())
         else:
             self._config.add_section('paths')
 
