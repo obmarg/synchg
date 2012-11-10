@@ -87,7 +87,7 @@ def _SanityCheckRepos(local_repo, host, remote_path, remote):
         local_repo.config.AddRemote(host, hg_remote_path)
 
     if host not in local_repo.mqconfig.remotes:
-        local_repo.mqconfig.AddRemote(host, hg_remote_path + '.hg/patches')
+        local_repo.mqconfig.AddRemote(host, hg_remote_path + '/.hg/patches')
 
     # TODO: Would probably be good to check that the remotes aren't
     #       pointing at the wrong address as well
