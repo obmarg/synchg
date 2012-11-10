@@ -45,17 +45,57 @@ def SyncRemote(host, name, localpath, remote_root):
     with RemoteMachine(host) as remote:
         with plumbum.local.cwd(localpath):
             local = Repo(plumbum.local, host)
-            rpath = remote.cwd / remote_root / name
-            if not rpath.exists():
-                print "Remote repository can't be found."
-                if yn('Do you want to create a clone?'):
-                    local.Clone('ssh://{0}/{1}/{2}'.format(
-                        host, remote_root, name
-                        ))
-                else:
-                    raise AbortException
-            with remote.cwd(rpath):
+            remote_path = remote_root + '/' + name
+            _SanityCheckRepos(local, host, remote_path, remote)
+            with remote.cwd(remote.cwd / remote_path):
                 _DoSync(local, Repo(remote))
+
+
+def _SanityCheckRepos(local_repo, host, remote_path, remote):
+    '''
+    Does a sanity check of the repositories, and attempts
+    to fix any problems found.
+
+    This includes cloning the repository, setting up remotes
+    and setting up mq repositories.
+
+    It's expected that the local path will be set up by this point
+
+    :param local_repo:  A Repo object for the local repository
+    :param host:        The hostname of the remote repo
+    :param remote_path: The path to the remote repository as a string
+    :param remote:      A plumbum machine for the remote machine
+    '''
+    patch_dir = plumbum.local.cwd / '.hg' / 'patches'
+    if patch_dir.exists():
+        if not (patch_dir / '.hg').exists():
+            # Seems mq --init hasn't been run.  Run it.
+            local_repo.InitMq()
+            local_repo.CommitMq()
+
+    # Check if the remote exists, and clone it if not
+    hg_remote_path = 'ssh://{0}/{1}'.format(host, remote_path)
+    rpath = remote.cwd / remote_path
+    if not rpath.exists():
+        print "Remote repository can't be found."
+        if yn('Do you want to create a clone?'):
+            local_repo.Clone(hg_remote_path)
+        else:
+            raise AbortException
+
+    # Check if remote paths are set up properly
+    if host not in local_repo.config.remotes:
+        local_repo.config.AddRemote(host, hg_remote_path)
+
+    if host not in local_repo.mqconfig.remotes:
+        local_repo.mqconfig.AddRemote(host, hg_remote_path + '/.hg/patches')
+
+    # TODO: Would probably be good to check that the remotes aren't
+    #       pointing at the wrong address as well
+
+    # Finally, check if the mq repository needs cloned
+    if patch_dir.exists() and not (rpath / '.hg' / 'patches').exists():
+        local_repo.CloneMq(hg_remote_path)
 
 
 def _DoSync(local, remote):
