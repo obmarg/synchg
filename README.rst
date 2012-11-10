@@ -36,20 +36,6 @@ Synchg and it's python dependencies can be installed via pip::
 Using SyncHg
 =============
 
-Before using synchg on a repository you should ensure that your environment is
-set up correctly.  If you intend to use mq patches with synchg, then you should
-run ``hg init --mq`` on each local repository before you attempt to use it with
-synchg.
-
-It's recommended that you use synchg to make the initial clone to your remote
-machine. This way it can take steps to add necessary settings to the local
-repository.  However, if you wish to use synchg with an existing clone of your
-repository, then read the section below entitled
-`Using With Existing Clones`_.
-
-Running The Script
-------------------
-
 The synchg script should be run from the command line::
 
   $ synchg remote_host [local_path=None]
@@ -82,16 +68,3 @@ Remote source directory
 
 If you want to change the configuration of synchg, then simply run ``synchg
 -c`` to run the config process again.
-
-Using With Existing Clones
---------------------------
-
-Though it's recommended that you allow synchg to perform the initial clone of a
-repository, it is possible to use it with existing clones.  You simply need to
-make sure that the remote repository is listed as a remote in the .hgrc for
-your local repository.  The remote should be named using the hostname of the
-remote machine.
-
-If you intend to use mq patches, this will also need to be done with the mq
-repository.
-
