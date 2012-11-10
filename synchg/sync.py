@@ -46,12 +46,12 @@ def SyncRemote(host, name, localpath, remote_root):
         with plumbum.local.cwd(localpath):
             local = Repo(plumbum.local, host)
             remote_path = remote_root + '/' + name
-            _SanityCheckRepos(host, remote_path, remote)
+            _SanityCheckRepos(local, host, remote_path, remote)
             with remote.cwd(remote.cwd / remote_path):
                 _DoSync(local, Repo(remote))
 
 
-def _SanityCheckRepos(host, local_repo, remote_path, remote):
+def _SanityCheckRepos(local_repo, host, remote_path, remote):
     '''
     Does a sanity check of the repositories, and attempts
     to fix any problems found.
@@ -61,8 +61,8 @@ def _SanityCheckRepos(host, local_repo, remote_path, remote):
 
     It's expected that the local path will be set up by this point
 
-    :param host:        The hostname of the remote repo
     :param local_repo:  A Repo object for the local repository
+    :param host:        The hostname of the remote repo
     :param remote_path: The path to the remote repository as a string
     :param remote:      A plumbum machine for the remote machine
     '''
@@ -71,6 +71,7 @@ def _SanityCheckRepos(host, local_repo, remote_path, remote):
         if not (patch_dir / '.hg').exists():
             # Seems mq --init hasn't been run.  Run it.
             local_repo.InitMq()
+            local_repo.CommitMq()
 
     # Check if the remote exists, and clone it if not
     rpath = remote.cwd / remote_path
