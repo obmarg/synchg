@@ -30,6 +30,9 @@ class Repo(object):
     ChangesetInfo = namedtuple('ChangesetInfo', ['hash', 'desc'])
     ChangesetInfoRegexp = re.compile(r'^(?P<hash>\w+)\t(?P<desc>.*)$')
 
+    # Should be set to true during tests.
+    Testing = False
+
     def __init__(self, machine, remote=None):
         '''
         :param machine:     The plumbum machine object to use
@@ -40,7 +43,14 @@ class Repo(object):
         self.machine = machine
         self.hg = self.machine['hg']
         self.remote = remote
-        self._path = copy.copy(self.machine.cwd)
+        try:
+            self._path = copy.copy(self.machine.cwd)
+        except:
+            # This excepts during testing, so ignore it
+            if self.Testing:
+                self._path = self.machine.cwd
+            else:
+                raise
         self._currentRev = self._branch = None
         self.prevLevel = None
         self._config = self._mqconfig = None

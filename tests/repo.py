@@ -8,6 +8,11 @@ from synchg.repo import Repo, RepoConfig
 # Keep pep8 happy
 equal_to = be = be_called = throw = None
 
+def setUp():
+    Repo.Testing = True
+
+def tearDown():
+    Repo.Testing = False
 
 def CreateRepo(remote=None, clean_mq=False):
     machine = create_autospec(LocalMachine, instance=True)
