@@ -10,6 +10,9 @@
     <li><a href='https://github.com/obmarg/synchg'>GitHub</a></li>
     <li><a href='https://github.com/obmarg/synchg/issues'>Issue Tracker</a></li>
     </ul>
+    <a href="http://travis-ci.org/obmarg/synchg" target="_blank">
+    <img src="https://secure.travis-ci.org/obmarg/synchg.png" 
+    style="display: block; margin-left: auto; margin-right: auto;" title="Travis CI status"></a>
     </div>
 
 .. include:: ../README.rst
