@@ -1,5 +1,6 @@
 import re
 import functools
+import copy
 from collections import namedtuple
 from ConfigParser import ConfigParser
 from contextlib import contextmanager
@@ -39,10 +40,7 @@ class Repo(object):
         self.machine = machine
         self.hg = self.machine['hg']
         self.remote = remote
-        # TODO: Really need to figure out how to copy the path
-        #       here, since at the moment it's just another name
-        #       for cwd :(
-        self._path = self.machine.cwd
+        self._path = copy.copy(self.machine.cwd)
         self._currentRev = self._branch = None
         self.prevLevel = None
         self._config = self._mqconfig = None
