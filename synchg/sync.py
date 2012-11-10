@@ -53,7 +53,7 @@ def SyncRemote(host, name, localpath, remote_root):
 
 def _SanityCheckRepos(host, local_repo, remote_path, remote):
     '''
-    Does a sanity check of remote repositories, and attempts
+    Does a sanity check of the repositories, and attempts
     to fix any problems found.
 
     This includes cloning the repository, setting up remotes
@@ -66,7 +66,13 @@ def _SanityCheckRepos(host, local_repo, remote_path, remote):
     :param remote_path: The path to the remote repository as a string
     :param remote:      A plumbum machine for the remote machine
     '''
-    # Check if the remote exists, and clone it.
+    patch_dir = plumbum.local.cwd / '.hg' / 'patches'
+    if patch_dir.exists():
+        if not (patch_dir / '.hg').exists():
+            # Seems mq --init hasn't been run.  Run it.
+            local_repo.InitMq()
+
+    # Check if the remote exists, and clone it if not
     rpath = remote.cwd / remote_path
     if not rpath.exists():
         print "Remote repository can't be found."
@@ -74,6 +80,10 @@ def _SanityCheckRepos(host, local_repo, remote_path, remote):
             local_repo.Clone('ssh://{0}/{1}'.format(host, remote_path))
         else:
             raise AbortException
+
+    # TODO: Check that remotes have been setup for local & mq.
+
+    # TODO: Finally, check if the mq repository needs cloned
 
 
 def _DoSync(local, remote):

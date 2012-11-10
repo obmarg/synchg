@@ -334,6 +334,12 @@ class Repo(object):
                 #1 just means there's no changes
                 raise
 
+    def InitMq(self):
+        '''
+        Initialises the mq repository
+        '''
+        self.hg('init', '--mq')
+
     @_CleanMq
     def Clone(self, destination, createRemote=True):
         '''
@@ -349,7 +355,6 @@ class Repo(object):
         patches = self._path / '.hg' / 'patches'
         if patches.exists():
             # Clone mq repository
-            # TODO: Possibly do a sanity check and call hg init --mq if needed
             with self.machine.cwd(patches):
                 mqdest = destination + '/.hg/patches'
                 self._DoClone(self.mqconfig, mqdest, remoteName)

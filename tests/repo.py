@@ -306,6 +306,13 @@ class TestRepoCommitMq:
         repo.CommitMq |should| throw(ProcessExecutionError)
 
 
+class TestRepoInitMq:
+    def it_runs_init_mq(self):
+        repo = CreateRepo()
+        repo.InitMq()
+        repo.hg.assert_called_with('init', '--mq')
+
+
 class TestRepoClone:
     @patch.object(Repo, 'config', None)
     def it_clones_main_repo(self):
