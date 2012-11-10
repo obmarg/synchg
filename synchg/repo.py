@@ -362,10 +362,27 @@ class Repo(object):
         self._DoClone(self.config, destination, remoteName)
         patches = self._path / '.hg' / 'patches'
         if patches.exists():
+            self.CloneMq(destination, createRemote)
             # Clone mq repository
             with self.machine.cwd(patches):
                 mqdest = destination + '/.hg/patches'
                 self._DoClone(self.mqconfig, mqdest, remoteName)
+
+    def CloneMq(self, destination, createRemote=True):
+        '''
+        Clones the mq repository to a different location
+
+        :param destination:     The destination path to the top-level remote
+                                repository.  NOT the remote mq repository
+        :param createRemote:    If set, a remote will be created in the local
+                                mq hgrc with the name the class was initialised
+                                with
+        '''
+        remoteName = self.remote if createRemote else None
+        patches_path = self._path / '.hg' / 'patches'
+        destination = destination + '/.hg/patches'
+        with self.machine.cwd(patches_path):
+            self._DoClone(self.mqconfig, destination, remoteName)
 
     def _DoClone(self, config, destination, remoteName):
         '''

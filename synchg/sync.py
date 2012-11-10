@@ -83,6 +83,7 @@ def _SanityCheckRepos(local_repo, host, remote_path, remote):
         else:
             raise AbortException
 
+    # Check if remote paths are set up properly
     if host not in local_repo.config.remotes:
         local_repo.config.AddRemote(host, hg_remote_path)
 
@@ -92,7 +93,9 @@ def _SanityCheckRepos(local_repo, host, remote_path, remote):
     # TODO: Would probably be good to check that the remotes aren't
     #       pointing at the wrong address as well
 
-    # TODO: Finally, check if the mq repository needs cloned
+    # Finally, check if the mq repository needs cloned
+    if patch_dir.exists() and not (rpath / '.hg' / 'patches').exists():
+        local_repo.CloneMq(hg_remote_path)
 
 
 def _DoSync(local, remote):
