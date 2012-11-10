@@ -390,4 +390,17 @@ class TestRepoConfig(object):
                 call().write(sentinel.config)
                 ])
 
+    @patch('synchg.repo.ConfigParser', autospec=True)
+    def it_returns_remote_dict(self, __):
+        config = RepoConfig(MagicMock())
+        config._config.reset_mock()
+        config._config.items.return_value = [
+                ('key1', sentinel.value1),
+                ('key2', sentinel.value2)
+                ]
+        config.remotes |should| equal_to(
+                dict(key1=sentinel.value1, key2=sentinel.value2)
+                )
+        config._config.items.assert_called_with('paths')
+
 

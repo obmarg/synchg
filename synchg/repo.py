@@ -393,4 +393,11 @@ class RepoConfig(object):
         self._config.set('paths', name, destination)
         self._config.write(self._path.open('w'))
 
+    @property
+    def remotes(self):
+        '''
+        Property to get a dictionary of remotes
+        '''
+        return dict(self._config.items('paths'))
+
 
