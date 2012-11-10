@@ -45,17 +45,35 @@ def SyncRemote(host, name, localpath, remote_root):
     with RemoteMachine(host) as remote:
         with plumbum.local.cwd(localpath):
             local = Repo(plumbum.local, host)
-            rpath = remote.cwd / remote_root / name
-            if not rpath.exists():
-                print "Remote repository can't be found."
-                if yn('Do you want to create a clone?'):
-                    local.Clone('ssh://{0}/{1}/{2}'.format(
-                        host, remote_root, name
-                        ))
-                else:
-                    raise AbortException
-            with remote.cwd(rpath):
+            remote_path = remote_root + '/' + name
+            _SanityCheckRepos(host, remote_path, remote)
+            with remote.cwd(remote.cwd / remote_path):
                 _DoSync(local, Repo(remote))
+
+
+def _SanityCheckRepos(host, local_repo, remote_path, remote):
+    '''
+    Does a sanity check of remote repositories, and attempts
+    to fix any problems found.
+
+    This includes cloning the repository, setting up remotes
+    and setting up mq repositories.
+
+    It's expected that the local path will be set up by this point
+
+    :param host:        The hostname of the remote repo
+    :param local_repo:  A Repo object for the local repository
+    :param remote_path: The path to the remote repository as a string
+    :param remote:      A plumbum machine for the remote machine
+    '''
+    # Check if the remote exists, and clone it.
+    rpath = remote.cwd / remote_path
+    if not rpath.exists():
+        print "Remote repository can't be found."
+        if yn('Do you want to create a clone?'):
+            local_repo.Clone('ssh://{0}/{1}'.format(host, remote_path))
+        else:
+            raise AbortException
 
 
 def _DoSync(local, remote):
