@@ -74,15 +74,23 @@ def _SanityCheckRepos(local_repo, host, remote_path, remote):
             local_repo.CommitMq()
 
     # Check if the remote exists, and clone it if not
+    hg_remote_path = 'ssh://{0}/{1}'.format(host, remote_path)
     rpath = remote.cwd / remote_path
     if not rpath.exists():
         print "Remote repository can't be found."
         if yn('Do you want to create a clone?'):
-            local_repo.Clone('ssh://{0}/{1}'.format(host, remote_path))
+            local_repo.Clone(hg_remote_path)
         else:
             raise AbortException
 
-    # TODO: Check that remotes have been setup for local & mq.
+    if host not in local_repo.config.remotes:
+        local_repo.config.AddRemote(host, hg_remote_path)
+
+    if host not in local_repo.mqconfig.remotes:
+        local_repo.mqconfig.AddRemote(host, hg_remote_path + '.hg/patches')
+
+    # TODO: Would probably be good to check that the remotes aren't
+    #       pointing at the wrong address as well
 
     # TODO: Finally, check if the mq repository needs cloned
 
