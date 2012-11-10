@@ -1,5 +1,6 @@
 import re
 import functools
+import copy
 from collections import namedtuple
 from ConfigParser import ConfigParser
 from contextlib import contextmanager
@@ -29,6 +30,9 @@ class Repo(object):
     ChangesetInfo = namedtuple('ChangesetInfo', ['hash', 'desc'])
     ChangesetInfoRegexp = re.compile(r'^(?P<hash>\w+)\t(?P<desc>.*)$')
 
+    # Should be set to true during tests.
+    Testing = False
+
     def __init__(self, machine, remote=None):
         '''
         :param machine:     The plumbum machine object to use
@@ -39,8 +43,17 @@ class Repo(object):
         self.machine = machine
         self.hg = self.machine['hg']
         self.remote = remote
+        try:
+            self._path = copy.copy(self.machine.cwd)
+        except:
+            # This excepts during testing, so ignore it
+            if self.Testing:
+                self._path = self.machine.cwd
+            else:
+                raise
         self._currentRev = self._branch = None
         self.prevLevel = None
+        self._config = self._mqconfig = None
 
     @contextmanager
     def CleanMq(self):
@@ -76,19 +89,25 @@ class Repo(object):
                     & :class:`MqAppliedInfo`
         '''
         commitData = Repo.CommitChangeInfo(0, 0)
-        mqData = None
+        mqData = Repo.MqAppliedInfo(0, 0)
         commitRegexp = re.compile(
                 r'^commit:\s+((\d+) modified(, (\d+) unknown)?)?'
                 )
-        mqRegexp = re.compile(r'^mq:\s+((\d+) applied, (\d+) unapplied)?')
+        mqRegexp = re.compile(
+                r'^mq:\s+((\d+) applied,?\s*)?((\d+) unapplied)?'
+                )
         lines = self.hg('summary').splitlines()
         for line in lines:
             match = commitRegexp.search( line )
             if match:
-                commitData = Repo.CommitChangeInfo(*match.group( 2, 4 ))
+                commitData = Repo.CommitChangeInfo(
+                        int(match.group(2) or 0), int(match.group(4) or 0)
+                        )
             match = mqRegexp.search( line )
             if match:
-                mqData = Repo.MqAppliedInfo(*match.group(2, 3))
+                mqData = Repo.MqAppliedInfo(
+                        int(match.group(2) or 0), int(match.group(4) or 0)
+                        )
         return Repo.SummaryInfo(commitData, mqData)
 
     @property
@@ -114,6 +133,28 @@ class Repo(object):
         if not self._branch:
             self._CheckCurrentRev()
         return self._branch
+
+    @property
+    def config(self):
+        '''
+        Gets the configuration for this repository
+
+        :returns: A ``RepoConfig`` class
+        '''
+        if not self._config:
+            self._config = RepoConfig(self._path)
+        return self._config
+
+    @property
+    def mqconfig(self):
+        '''
+        Gets the configuration for the mq repository
+
+        :returns A ``RepoConfig`` class
+        '''
+        if not self._mqconfig:
+            self._mqconfig = RepoConfig(self._path / '.hg' / 'patches')
+        return self._mqconfig
 
     @_CleanMq
     def _CheckCurrentRev( self ):
@@ -202,11 +243,10 @@ class Repo(object):
         :returns: A single mq patch name (or None)
         '''
         try:
-            patches = self._RunListCommand(self.hg['qapplied'])
-            if patches:
-                return patches[-1]
+            return self.hg('qtop').strip()
         except ProcessExecutionError as e:
-            if e.retcode != 255:
+            if e.retcode not in [1, 255]:
+                # 1 means no patches
                 # 255 means mq is probably disabled
                 raise
         return None
@@ -302,34 +342,92 @@ class Repo(object):
                 #1 just means there's no changes
                 raise
 
+    def InitMq(self):
+        '''
+        Initialises the mq repository
+        '''
+        self.hg('init', '--mq')
+
     @_CleanMq
-    def Clone(self, destination, remoteName=None):
+    def Clone(self, destination, createRemote=True):
         '''
         Clones the repository to a different location
 
         :param destination:     The destination clone path
-        :param remoteName:      If set a remote will be created with this name
+        :param createRemote:    If set a remote will be created in the local
+                                hgrc with the name the class was initialised
+                                with.
         '''
-        self._DoClone(destination, remoteName)
-        patches = self.machine.cwd / '.hg' / 'patches'
+        remoteName = self.remote if createRemote else None
+        self._DoClone(self.config, destination, remoteName)
+        patches = self._path / '.hg' / 'patches'
         if patches.exists():
+            self.CloneMq(destination, createRemote)
             # Clone mq repository
-            # TODO: Possibly do a sanity check and call hg init --mq if needed
             with self.machine.cwd(patches):
                 mqdest = destination + '/.hg/patches'
-                self._DoClone(mqdest, remoteName)
+                self._DoClone(self.mqconfig, mqdest, remoteName)
 
-    def _DoClone(self, destination, remoteName):
+    def CloneMq(self, destination, createRemote=True):
+        '''
+        Clones the mq repository to a different location
+
+        :param destination:     The destination path to the top-level remote
+                                repository.  NOT the remote mq repository
+        :param createRemote:    If set, a remote will be created in the local
+                                mq hgrc with the name the class was initialised
+                                with
+        '''
+        remoteName = self.remote if createRemote else None
+        patches_path = self._path / '.hg' / 'patches'
+        destination = destination + '/.hg/patches'
+        with self.machine.cwd(patches_path):
+            self._DoClone(self.mqconfig, destination, remoteName)
+
+    def _DoClone(self, config, destination, remoteName):
         '''
         Actually performs a clone operation
 
+        :param config:          A configuration object to update
         :param destination:     The destination clone path
         :param remoteName:      The name of the remote to create (if any)
         '''
         self.hg('clone', '.', destination)
         if remoteName:
-            config = self.machine.cwd / '.hg' / 'hgrc'
-            hgconfig = ConfigParser()
-            hgconfig.readfp(config.open())
-            hgconfig.set('paths', remoteName, destination)
-            hgconfig.write(config.open('w'))
+            config.AddRemote(remoteName, destination)
+
+
+class RepoConfig(object):
+    '''
+    This class provides an abstraction around repository configuration files
+    '''
+
+    def __init__(self, path):
+        '''
+        :param path:    Plumbum path to the repository
+        '''
+        self._config = ConfigParser()
+        self._path = path / '.hg' / 'hgrc'
+        if self._path.exists():
+            self._config.readfp(self._path.open())
+        else:
+            self._config.add_section('paths')
+
+    def AddRemote(self, name, destination):
+        '''
+        Adds a remote to the config, or overwrites if it already exists
+
+        :param name:        The name of the remote
+        :param destination: The destination path of the remote
+        '''
+        self._config.set('paths', name, destination)
+        self._config.write(self._path.open('w'))
+
+    @property
+    def remotes(self):
+        '''
+        Property to get a dictionary of remotes
+        '''
+        return dict(self._config.items('paths'))
+
+

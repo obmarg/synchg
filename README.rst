@@ -3,7 +3,8 @@ Mercurials push & pull help to make this fairly easy, but if you make use of
 mercurial queues or the histedit extension then it can quickly become tedious.
 That's where synchg comes in.  
 
-Synchg intends to make syncing two mercurial repositories as simple as possible.  Simply run a command, and synchg will take care of the rest.
+Synchg intends to make syncing two mercurial repositories as simple as
+possible.  Simply run a command, and synchg will take care of the rest.
 
 Requirements
 ============
@@ -17,7 +18,11 @@ Synchg depends on these python packages:
 
 It also requires:
 
+* An ssh client on the path (putty on windows, openssh compatible on other
+  platforms)
 * Access to an SSH server on the remote machine(s)
+* An ssh private key loaded in an ssh agent (pagaent on windows, ssh-agent on
+  other platforms)
 * That the `mq <http://mercurial.selenic.com/wiki/MqExtension>`_ extension is
   enabled on the remote machine(s)
 
@@ -30,20 +35,6 @@ Synchg and it's python dependencies can be installed via pip::
 
 Using SyncHg
 =============
-
-Before using synchg on a repository you should ensure that your environment is
-set up correctly.  If you intend to use mq patches with synchg, then you should
-run ``hg init --mq`` on each local repository before you attempt to use it with
-synchg.
-
-It's recommended that you use synchg to make the initial clone to your remote
-machine. This way it can take steps to add necessary settings to the local
-repository.  However, if you wish to use synchg with an existing clone of your
-repository, then read the section below entitled
-`Using With Existing Clones`_.
-
-Running The Script
-------------------
 
 The synchg script should be run from the command line::
 
@@ -77,16 +68,3 @@ Remote source directory
 
 If you want to change the configuration of synchg, then simply run ``synchg
 -c`` to run the config process again.
-
-Using With Existing Clones
---------------------------
-
-Though it's recommended that you allow synchg to perform the initial clone of a
-repository, it is possible to use it with existing clones.  You simply need to
-make sure that the remote repository is listed as a remote in the .hgrc for
-your local repository.  The remote should be named using the hostname of the
-remote machine.
-
-If you intend to use mq patches, this will also need to be done with the mq
-repository.
-
