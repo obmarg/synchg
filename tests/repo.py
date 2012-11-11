@@ -8,11 +8,14 @@ from synchg.repo import Repo, RepoConfig
 # Keep pep8 happy
 equal_to = be = be_called = throw = None
 
+
 def setUp():
     Repo.Testing = True
 
+
 def tearDown():
     Repo.Testing = False
+
 
 def CreateRepo(remote=None, clean_mq=False):
     machine = create_autospec(LocalMachine, instance=True)
@@ -32,9 +35,9 @@ class TestRepoCleanMq:
     def should_push_after_done(self, PopPatch, PushPatch):
         repo = CreateRepo(clean_mq=True)
         with repo.CleanMq():
-            PopPatch |should| be_called
-            PushPatch |should_not| be_called
-        PushPatch.assert_called_with(sentinel.patch)
+            assert PopPatch.called
+            assert not PushPatch.called
+        repo.PushPatch.assert_called_with(sentinel.patch)
 
     @patch.multiple(
             Repo, lastAppliedPatch=None,
@@ -43,9 +46,9 @@ class TestRepoCleanMq:
     def should_not_push_if_no_patches(self, PopPatch, PushPatch):
         repo = CreateRepo(clean_mq=True)
         with repo.CleanMq():
-            PopPatch |should| be_called
-            PushPatch |should_not| be_called
-        PushPatch |should_not| be_called
+            assert PopPatch.called
+            assert not PushPatch.called
+        assert not PushPatch.called
 
 
 class TestRepoSummary:
@@ -75,13 +78,6 @@ class TestRepoSummary:
 
 
 class TestRepoCurrentRev:
-    @patch.object(Repo, '_CheckCurrentRev')
-    def it_only_checks_once(self, checkCurrentRev):
-        repo = CreateRepo()
-        repo._currentRev = sentinel.rev
-        repo.currentRev |should| be(sentinel.rev)
-        checkCurrentRev |should_not| be_called
-
     def it_parses_correct_revision(self):
         repo = CreateRepo()
         repo.hg.return_value = 'abc43256712f 4.7'
@@ -90,13 +86,6 @@ class TestRepoCurrentRev:
 
 
 class TestRepoBranch:
-    @patch.object(Repo, '_CheckCurrentRev')
-    def it_only_checks_once(self, checkCurrentRev):
-        repo = CreateRepo()
-        repo._branch = sentinel.branch
-        repo.branch |should| be(sentinel.branch)
-        checkCurrentRev |should_not| be_called
-
     def it_parses_correct_branch(self):
         repo = CreateRepo()
         repo.hg.return_value = 'abc43256712f 4.7'
@@ -226,7 +215,7 @@ class TestRepoPopPatch:
         repo = CreateRepo()
         repo.PopPatch(sentinel.patch)
         repo.PopPatch()
-        repo.hg |should_not| be_called
+        assert not repo.hg.called
 
     @patch.object(Repo, 'lastAppliedPatch', True)
     def it_pops_all_by_default(self):
@@ -303,7 +292,7 @@ class TestRepoCommitMq:
         repo = CreateRepo()
         repo.hg.side_effect = ProcessExecutionError('', 1, '', '')
         repo.CommitMq()
-        repo.hg |should| be_called
+        assert repo.hg.called
 
     def it_propagates_other_errors(self):
         repo = CreateRepo()
