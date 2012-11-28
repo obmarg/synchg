@@ -313,22 +313,15 @@ class TestRepoClone:
         repo = CreateRepo()
         (repo._path / '.hg' / 'patches').exists.return_value = False
         repo.Clone(sentinel.destination, False)
-        # TODO: would be nice to use should_dsl for this.
-        #       (Probably with should aliased as was or something)
         repo.hg.assert_called_with('clone', '.', sentinel.destination)
 
-    @patch.multiple(Repo, config=None, mqconfig=None)
-    def it_clones_mq_repo_if_there(self):
+    @patch.multiple(Repo, config=None, mqconfig=None, CloneMq=DEFAULT)
+    def it_clones_mq_repo_if_there(self, CloneMq):
         repo = CreateRepo()
         (repo._path / '.hg' / 'patches').exists.return_value = True
         repo.Clone('machine', False)
-        # TODO: would be nice to use should_dsl for this.
-        #       (Probably with should aliased as was or something)
-        print repo.hg.mock_calls
-        repo.hg.assert_has_calls([
-                call('clone', '.', 'machine'),
-                call('clone', '.', 'machine' + '/.hg/patches')
-                ])
+        repo.hg.assert_called_with('clone', '.', 'machine')
+        CloneMq.assert_called_with('machine', False)
 
     @patch.multiple(
             Repo,
@@ -342,18 +335,26 @@ class TestRepoClone:
         repo.config.AddRemote.assert_called_with(sentinel.remote, 'dest')
         repo.mqconfig.AddRemote |should_not| be_called
 
+
+class TestMqClone:
+    @patch.multiple(Repo, config=None, mqconfig=None)
+    def it_clones(self):
+        repo = CreateRepo()
+        repo.CloneMq('dest', False)
+        repo.hg.assert_called_with('clone', '.', 'dest/.hg/patches')
+
     @patch.multiple(
             Repo, config=Mock(spec_set=RepoConfig),
             mqconfig=Mock(spec_set=RepoConfig)
             )
     def it_sets_up_mq_remote(self):
         repo = CreateRepo(sentinel.remote)
-        (repo._path / '.hg' / 'patches').exists.return_value = True
-        repo.Clone('dest')
+        repo.CloneMq('dest')
         repo.mqconfig.AddRemote.assert_called_with(
                 sentinel.remote, 'dest/.hg/patches'
                 )
-        repo.config.AddRemote |should| be_called
+        repo.config.AddRemote |should_not| be_called
+        repo.mqconfig.AddRemote |should| be_called
 
 
 class TestRepoConfig(object):
