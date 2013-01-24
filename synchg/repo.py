@@ -363,10 +363,6 @@ class Repo(object):
         patches = self._path / '.hg' / 'patches'
         if patches.exists():
             self.CloneMq(destination, createRemote)
-            # Clone mq repository
-            with self.machine.cwd(patches):
-                mqdest = destination + '/.hg/patches'
-                self._DoClone(self.mqconfig, mqdest, remoteName)
 
     def CloneMq(self, destination, createRemote=True):
         '''

@@ -1,3 +1,9 @@
+1.0.0
+-----
+* Fixed a bug in unit tests
+* Repo.Clone will no longer try to perform initial clone twice
+* Enough testing has been done that I consider this v1.0.0
+
 0.9.8
 -----
 * Fixed a bug that caused cloning to fail if hgrc files weren't in place
