@@ -199,7 +199,7 @@ class Repo(object):
         '''
         lines = self._RunListCommand(*pargs, **kwargs)
         matches = (self.ChangesetInfoRegexp.match(line) for line in lines)
-        return [self.ChangesetInfo(**match.groupdict()) for match in matches]
+        return [self.ChangesetInfo(**match.groupdict()) for match in matches if match]
 
     @property
     @_CleanMq
